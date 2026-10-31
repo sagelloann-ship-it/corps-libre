@@ -940,8 +940,9 @@ rendreAccueil(); rendreProgrammes();
     try{
       const cles = (await caches.keys()).filter(k => k.startsWith("corpslibre-"));
       if (!cles.length) return null;
-      const c = await caches.open(cles[cles.length - 1]);
-      return (await c.keys()).length;
+      let n = 0;                       // cache application + cache images
+      for (const k of cles) n += (await (await caches.open(k)).keys()).length;
+      return n;
     }catch(e){ return null; }
   }
   const TOTAL = 137;            // 6 fichiers de base + 131 images
