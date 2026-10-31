@@ -6,9 +6,12 @@
 <meta name="theme-color" content="#0d1117">
 <title>Corps Libre — entraînement sans matériel</title>
 <link rel="manifest" href="manifest.json">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<!-- Police chargée sans bloquer l'affichage : le texte apparaît immédiatement
+     dans la police du système, Outfit prend le relais une fois disponible.
+     Hors ligne, cette requête échoue sans aucune conséquence. -->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
+      rel="stylesheet" media="print" onload="this.media='all';this.onload=null">
 <style>
 :root{
   --bg:#0b0f14; --bg2:#121923; --bg3:#1a2432; --line:#243040;
@@ -43,9 +46,13 @@ h1,h2,h3{margin:0;line-height:1.2;font-weight:600}
 .tap:active{transform:scale(.985);border-color:#36465c}
 
 /* ---------- visuel animé (sprite 2 images) ---------- */
+/* Les visuels ne chargent leur image que lorsqu'ils approchent de l'écran, et
+   n'animent que lorsqu'ils y sont : décoder 131 images d'un coup retardait
+   l'affichage initial de plusieurs secondes sur mobile. */
 .vis{width:100%;aspect-ratio:3/2;background-size:100% 200%;background-position:0 0;
   background-repeat:no-repeat;background-color:#0f1621;border-radius:10px;
-  animation:bascule 1.7s steps(1,end) infinite}
+  animation:bascule 1.7s steps(1,end) infinite;animation-play-state:paused}
+.vis.vu{animation-play-state:running}
 @keyframes bascule{0%,49.9%{background-position:0 0}50%,100%{background-position:0 100%}}
 .vis.fige{animation:none}
 .vis.lent{animation-duration:2.4s}
@@ -412,7 +419,34 @@ function seanceExpress(focus, minutes){
 const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const visuel = (e, cls="") => `<div class="vis ${cls}" style="background-image:url('img/${e.sprite}')"></div>`;
+/* `immediat` = le visuel est déjà à l'écran (lecteur de séance, fiche) : on
+   charge sans attendre l'observateur, pour éviter un clignotement. */
+const visuel = (e, cls="", immediat=false) => immediat
+  ? `<div class="vis vu ${cls}" style="background-image:url('img/${e.sprite}')"></div>`
+  : `<div class="vis ${cls}" data-img="img/${e.sprite}"></div>`;
+
+/* charge les images à l'approche de l'écran et n'anime que le visible */
+const OBS = ("IntersectionObserver" in window) ? new IntersectionObserver(entrees => {
+  entrees.forEach(en => {
+    const el = en.target;
+    if (en.isIntersecting){
+      const src = el.dataset.img;
+      if (src){ el.style.backgroundImage = `url('${src}')`; delete el.dataset.img; }
+      el.classList.add("vu");
+    } else el.classList.remove("vu");
+  });
+}, {rootMargin:"400px 0px"}) : null;
+
+function observerVisuels(racine){
+  if (!OBS) {   // navigateur ancien : on charge tout, sans finesse
+    (racine||document).querySelectorAll(".vis[data-img]").forEach(el => {
+      el.style.backgroundImage = `url('${el.dataset.img}')`;
+      delete el.dataset.img; el.classList.add("vu");
+    });
+    return;
+  }
+  (racine||document).querySelectorAll(".vis").forEach(el => OBS.observe(el));
+}
 const pastilles = (e, nz = 1) => `<span class="pill cat-${e.cat}">${LIB_CAT[e.cat]}</span>`
   + `<span class="pill n-${e.niv}">${LIB_NIV[e.niv]}</span>`
   + e.zones.slice(0, nz).map(z => `<span class="pill">${LIB_ZONE[z]||z}</span>`).join("");
@@ -435,6 +469,9 @@ $$(".nav button").forEach(b => b.onclick = () => {
   window.scrollTo(0,0);
   if (b.dataset.vue === "suivi") rendreSuivi();
   if (b.dataset.vue === "accueil") rendreAccueil();
+  if (b.dataset.vue === "biblio" && !bibliPrete){   // construite au premier affichage
+    bibliPrete = true; rendreFiltres(); rendreBiblio();
+  }
 });
 function allerA(vue){ const b = $(`.nav button[data-vue="${vue}"]`); if (b) b.click(); }
 
@@ -557,10 +594,11 @@ function rendreProgDetail(){
       <div class="inf"><div class="nm">${esc(e.nom)}</div><div class="mt">${pastilles(e)}</div></div></button>`;
   }).join("");
   $("#pdet-body").innerHTML = h;
+  observerVisuels($("#pdet-body"));
 }
 
 /* ---------------- bibliothèque ---------------- */
-let fCat = "tout", fZone = "tout", fTxt = "";
+let fCat = "tout", fZone = "tout", fTxt = "", bibliPrete = false;
 function rendreFiltres(){
   $("#f-cat").innerHTML = [`<button class="chip ${fCat==="tout"?"on":""}" data-c="tout">Tout</button>`]
     .concat(Object.entries(LIB_CAT).map(([k,v]) =>
@@ -583,6 +621,7 @@ function rendreBiblio(){
     `<button class="ligne" onclick="ouvrirExo('${e.id}')">${visuel(e,"lent")}
       <div class="inf"><div class="nm">${esc(e.nom)}</div><div class="mt">${pastilles(e)}</div></div></button>`).join("")
     : `<div class="vide">Aucun exercice ne correspond.</div>`;
+  observerVisuels($("#biblio-liste"));
 }
 $("#rech").oninput = ev => { fTxt = ev.target.value; rendreBiblio(); };
 
@@ -590,7 +629,7 @@ $("#rech").oninput = ev => { fTxt = ev.target.value; rendreBiblio(); };
 window.ouvrirExo = function(id){
   const e = PAR_ID[id];
   $("#det-body").innerHTML = `
-    ${visuel(e)}
+    ${visuel(e, "", true)}
     <h1 style="font-size:23px;margin-top:16px">${esc(e.nom)}</h1>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
       ${pastilles(e, 4)}<span class="pill">${fmtCible(e, e.defaut)}</span></div>
@@ -724,7 +763,7 @@ function conseilCourt(e){
 function rendreExoTemps(){
   const et = S.etapes[S.i], e = PAR_ID[et.id];
   entete();
-  $("#pl-body").innerHTML = `${visuel(e)}
+  $("#pl-body").innerHTML = `${visuel(e, "", true)}
     <div><div class="pname">${esc(e.nom)}</div>
       ${et.cote ? `<div class="pcote">${et.cote}</div>` : ""}</div>
     <div class="chrono" id="pl-chrono">${S.reste}</div>
@@ -738,7 +777,7 @@ function rendreExoTemps(){
 function rendreExoReps(){
   const et = S.etapes[S.i], e = PAR_ID[et.id];
   entete();
-  $("#pl-body").innerHTML = `${visuel(e)}
+  $("#pl-body").innerHTML = `${visuel(e, "", true)}
     <div><div class="pname">${esc(e.nom)}</div>
       ${et.cote ? `<div class="pcote">${et.cote}</div>` : ""}</div>
     <div class="chrono">${et.cible}</div>
@@ -756,7 +795,7 @@ function rendreRepos(){
   $("#pl-body").innerHTML = `
     <div style="font-size:15px;color:var(--acc);font-weight:700;letter-spacing:.1em;text-transform:uppercase">Repos</div>
     <div class="chrono" id="pl-chrono">${S.reste}</div>
-    ${visuel(e,"lent")}
+    ${visuel(e, "lent", true)}
     <div><div style="font-size:13px;color:var(--txt3);font-weight:600;margin-bottom:4px">ENSUITE</div>
       <div class="pname" style="font-size:20px">${esc(e.nom)}</div>
       <div style="font-size:13.5px;color:var(--txt2);margin-top:6px">${fmtCible(e, suiv.cible)}</div></div>`;
@@ -877,7 +916,7 @@ $("#su-reset").onclick = () => {
 };
 
 /* ---------------- démarrage ---------------- */
-rendreAccueil(); rendreProgrammes(); rendreFiltres(); rendreBiblio(); rendreSuivi();
+rendreAccueil(); rendreProgrammes();
 
 /* ---------------- mode hors ligne ----------------
    Le service worker met en cache les 136 fichiers de l'application.
