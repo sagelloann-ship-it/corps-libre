@@ -886,26 +886,68 @@ rendreAccueil(); rendreProgrammes(); rendreFiltres(); rendreBiblio(); rendreSuiv
    normalement mais sans garantie de démarrage à froid sans réseau. */
 (function horsLigne(){
   const z = document.getElementById("acc-hl");
-  const dire = (txt, ok) => {
-    if (!z) return;
+  if (!z) return;
+  const dire = (txt, etat) => {
     z.style.display = "block";
-    z.innerHTML = (ok ? "✓ " : "") + txt;
-    z.style.color = ok ? "var(--acc2)" : "var(--txt3)";
+    z.innerHTML = txt;
+    z.style.color = etat === "ok" ? "var(--acc2)" : etat === "ko" ? "var(--warm)" : "var(--txt3)";
   };
-  if (!("serviceWorker" in navigator)) return;
+  if (!("serviceWorker" in navigator) || !window.caches){
+    return dire("Mode hors ligne non disponible sur cet hébergement", "");
+  }
+
+  let fini = false;
+  async function compter(){
+    try{
+      const cles = (await caches.keys()).filter(k => k.startsWith("corpslibre-"));
+      if (!cles.length) return null;
+      const c = await caches.open(cles[cles.length - 1]);
+      return (await c.keys()).length;
+    }catch(e){ return null; }
+  }
+  const TOTAL = 137;            // 6 fichiers de base + 131 images
+  async function rafraichir(){
+    const n = await compter();
+    if (n === null) return dire("Préparation du mode hors ligne…", "");
+    if (n >= TOTAL - 2){
+      fini = true;
+      return dire(`✓ Disponible hors ligne — ${n} fichiers en cache`, "ok");
+    }
+    dire(`Téléchargement pour l'usage hors ligne… ${n} / ${TOTAL}`
+       + `<br><span style="opacity:.75">gardez l'application ouverte jusqu'à la fin</span>`, "");
+  }
+
   try{
-    navigator.serviceWorker.register("sw.js").then(reg => {
-      if (navigator.serviceWorker.controller) dire("Disponible hors ligne", true);
-      else {
-        dire("Mise en cache pour l'usage hors ligne…", false);
-        navigator.serviceWorker.addEventListener("controllerchange",
-          () => dire("Disponible hors ligne", true));
-        if (reg.installing) reg.installing.addEventListener("statechange", function(){
-          if (this.state === "activated") dire("Disponible hors ligne", true);
-        });
-      }
-    }).catch(() => {});
-  }catch(e){}
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+    rafraichir();
+    const boucle = setInterval(() => {
+      if (fini) return clearInterval(boucle);
+      rafraichir();
+    }, 1500);
+    // au bout de 3 minutes, on arrête de solliciter le téléphone
+    setTimeout(() => clearInterval(boucle), 180000);
+  }catch(e){ dire("Mode hors ligne indisponible", "ko"); }
+
+  // un appui sur l'indicateur force une remise en cache complète
+  z.onclick = async () => {
+    if (!confirmReset()) return;
+    try{
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+      const cles = await caches.keys();
+      await Promise.all(cles.map(k => caches.delete(k)));
+      location.reload();
+    }catch(e){}
+  };
+  let arme = false;
+  function confirmReset(){
+    if (arme) return true;
+    arme = true;
+    const avant = z.innerHTML;
+    z.innerHTML = "Appuyez à nouveau pour retélécharger l'application";
+    setTimeout(() => { arme = false; if (!fini) return; z.innerHTML = avant; }, 4000);
+    return false;
+  }
 })();
 
 // sécurité : empêcher la mise en veille pendant une séance, si disponible
