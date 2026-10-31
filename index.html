@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>Corps Libre — entraînement sans matériel</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14; --bg2:#121923; --bg3:#1a2432; --line:#243040;
+  --txt:#eef3f8; --txt2:#9fb0c4; --txt3:#6b7c91;
+  --acc:#4ade9a; --acc2:#2bb37a; --warm:#f6a94a; --cool:#5aa9f6; --rose:#f2708a;
+  --r:16px; --sp:16px;
+  --safeT:env(safe-area-inset-top,0px); --safeB:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--bg); color:var(--txt);
+  font-family:Outfit,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.5; overscroll-behavior-y:none;
+}
+button{font-family:inherit;font-size:inherit;color:inherit;border:0;background:none;cursor:pointer}
+h1,h2,h3{margin:0;line-height:1.2;font-weight:600}
+.app{max-width:560px;margin:0 auto;min-height:100%;padding-top:var(--safeT)}
+.vue{display:none;padding:0 var(--sp) 110px}
+.vue.on{display:block}
+
+/* ---------- en-tête ---------- */
+.hd{padding:22px 0 16px}
+.hd .sur{font-size:13px;color:var(--txt3);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.hd h1{font-size:27px;margin-top:4px;letter-spacing:-.02em}
+.hd p{margin:6px 0 0;color:var(--txt2);font-size:14.5px}
+
+/* ---------- cartes ---------- */
+.carte{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.carte.plat{padding:0;overflow:hidden}
+.tap{transition:transform .12s ease,border-color .12s ease}
+.tap:active{transform:scale(.985);border-color:#36465c}
+
+/* ---------- visuel animé (sprite 2 images) ---------- */
+.vis{width:100%;aspect-ratio:3/2;background-size:100% 200%;background-position:0 0;
+  background-repeat:no-repeat;background-color:#0f1621;border-radius:10px;
+  animation:bascule 1.7s steps(1,end) infinite}
+@keyframes bascule{0%,49.9%{background-position:0 0}50%,100%{background-position:0 100%}}
+.vis.fige{animation:none}
+.vis.lent{animation-duration:2.4s}
+
+/* ---------- pastilles ---------- */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;
+  padding:4px 9px;border-radius:999px;background:var(--bg3);color:var(--txt2);white-space:nowrap}
+.pill.cat-gainage{background:#1d3328;color:#7ee6ad}
+.pill.cat-callisthenie{background:#2a2438;color:#c4a6f5}
+.pill.cat-etirement{background:#1c2c3d;color:#8ec6f8}
+.pill.cat-mobilite{background:#33281c;color:#f6c489}
+.pill.cat-articulaire{background:#2d2024;color:#f3a0b2}
+.pill.cat-explosif{background:#331f1f;color:#f59e9e}
+.pill.n-debutant{color:#7ee6ad}.pill.n-intermediaire{color:#f6c489}.pill.n-avance{color:#f59e9e}
+
+/* ---------- boutons ---------- */
+.btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  padding:15px;border-radius:14px;font-weight:600;font-size:16px;
+  background:var(--bg3);border:1px solid var(--line);transition:transform .1s}
+.btn:active{transform:scale(.98)}
+.btn.pri{background:linear-gradient(135deg,var(--acc) 0%,var(--acc2) 100%);color:#05120c;border:0}
+.btn.pri:disabled{opacity:.4}
+.btn.sm{padding:11px;font-size:14.5px;border-radius:11px}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+
+/* ---------- filtres ---------- */
+.rech{width:100%;padding:13px 15px;border-radius:13px;background:var(--bg2);
+  border:1px solid var(--line);color:var(--txt);font-size:15.5px;outline:none;margin-bottom:11px}
+.rech:focus{border-color:var(--acc2)}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none;margin:0 calc(-1 * var(--sp));padding-left:var(--sp);padding-right:var(--sp)}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:8px 14px;border-radius:999px;background:var(--bg2);
+  border:1px solid var(--line);font-size:13.5px;font-weight:500;color:var(--txt2)}
+.chip.on{background:var(--acc);color:#05120c;border-color:var(--acc);font-weight:600}
+
+/* ---------- liste d'exercices ---------- */
+.ligne{display:flex;gap:13px;align-items:center;background:var(--bg2);border:1px solid var(--line);
+  border-radius:14px;padding:10px;margin-bottom:9px;text-align:left}
+.ligne .vis{width:96px;flex:0 0 96px;aspect-ratio:3/2;border-radius:9px}
+.ligne .inf{min-width:0;flex:1}
+.ligne .nm{font-weight:600;font-size:15px;margin-bottom:5px;line-height:1.25}
+.ligne .mt{display:flex;gap:5px;flex-wrap:wrap}
+
+/* ---------- détail ---------- */
+.det{position:fixed;inset:0;background:var(--bg);z-index:60;overflow-y:auto;display:none;
+  padding:var(--safeT) 0 calc(30px + var(--safeB))}
+.det.on{display:block}
+.det .inner{max-width:560px;margin:0 auto;padding:0 var(--sp)}
+.xclose{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;
+  padding:12px 0;background:linear-gradient(180deg,var(--bg) 70%,transparent)}
+.xclose button{width:38px;height:38px;border-radius:50%;background:var(--bg3);
+  display:grid;place-items:center;font-size:19px;line-height:1}
+.etapes{list-style:none;padding:0;margin:14px 0 0;counter-reset:e}
+.etapes li{counter-increment:e;position:relative;padding:0 0 14px 38px;color:var(--txt);font-size:15px}
+.etapes li::before{content:counter(e);position:absolute;left:0;top:0;width:26px;height:26px;
+  border-radius:50%;background:var(--bg3);color:var(--acc);font-size:13px;font-weight:700;
+  display:grid;place-items:center}
+.astuce{display:flex;gap:11px;background:#15241b;border:1px solid #23402f;border-radius:13px;
+  padding:13px;margin-top:6px;font-size:14.5px;color:#bfe9d1}
+.astuce b{color:var(--acc);display:block;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em}
+
+/* ---------- séance en cours ---------- */
+.play{position:fixed;inset:0;background:var(--bg);z-index:80;display:none;flex-direction:column;
+  padding:var(--safeT) 0 var(--safeB)}
+.play.on{display:flex}
+.play.repos{background:#0a1a14}
+.pbar{height:4px;background:var(--bg3);flex:0 0 auto}
+.pbar i{display:block;height:100%;background:var(--acc);transition:width .3s;border-radius:0 3px 3px 0}
+.ptop{display:flex;justify-content:space-between;align-items:center;padding:13px var(--sp);flex:0 0 auto}
+.ptop .pos{font-size:13px;color:var(--txt3);font-weight:600;letter-spacing:.05em}
+.ptop button{width:36px;height:36px;border-radius:50%;background:var(--bg3);display:grid;place-items:center;font-size:17px}
+.pbody{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:0 var(--sp);text-align:center;min-height:0;gap:14px}
+.pbody .vis{max-width:420px;width:100%;flex:0 1 auto}
+.pname{font-size:23px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+.pcote{font-size:13.5px;color:var(--warm);font-weight:600;margin-top:5px}
+.chrono{font-size:68px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.04em;line-height:1}
+.chrono.bas{color:var(--warm)}
+.pnext{font-size:14px;color:var(--txt3)}
+.pnext b{color:var(--txt2);font-weight:600}
+.pctl{display:flex;gap:11px;padding:14px var(--sp) 20px;flex:0 0 auto}
+.pctl .btn{flex:1}
+.pctl .btn.w{flex:0 0 58px}
+.fini{text-align:center;padding:30px var(--sp)}
+.fini .big{font-size:56px;margin-bottom:10px}
+
+/* ---------- suivi ---------- */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
+.stat{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:14px 10px;text-align:center}
+.stat .v{font-size:25px;font-weight:700;letter-spacing:-.02em}
+.stat .l{font-size:11.5px;color:var(--txt3);margin-top:3px;font-weight:500}
+.heat{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:4px}
+.heat i{aspect-ratio:1;border-radius:5px;background:var(--bg3);opacity:.5}
+.heat i.d1{background:#1d4634;opacity:1}.heat i.d2{background:#2e8a5f;opacity:1}.heat i.d3{background:var(--acc);opacity:1}
+.jours{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;font-size:10.5px;color:var(--txt3);text-align:center;margin-bottom:6px}
+.hist{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}
+.hist:last-child{border-bottom:0}
+.hist .d{font-size:14.5px;font-weight:500}
+.hist .s{font-size:12.5px;color:var(--txt3)}
+
+/* ---------- programme ---------- */
+.sem{display:flex;gap:7px;overflow-x:auto;padding:3px 0 12px;scrollbar-width:none}
+.sem::-webkit-scrollbar{display:none}
+.sem button{flex:0 0 auto;min-width:62px;padding:9px 12px;border-radius:12px;background:var(--bg2);
+  border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--txt2);text-align:center}
+.sem button.on{background:var(--bg3);border-color:var(--acc2);color:var(--txt)}
+.sem button.ok{color:var(--acc)}
+.seance{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--line);
+  border-radius:14px;padding:13px;margin-bottom:9px;text-align:left;width:100%}
+.seance .num{flex:0 0 38px;height:38px;border-radius:11px;background:var(--bg3);display:grid;
+  place-items:center;font-weight:700;font-size:15px;color:var(--txt2)}
+.seance.ok .num{background:#1d4634;color:var(--acc)}
+.seance .t{flex:1;min-width:0}
+.seance .t .a{font-weight:600;font-size:15px}
+.seance .t .b{font-size:12.5px;color:var(--txt3);margin-top:2px}
+.seance .fl{color:var(--txt3);font-size:18px}
+
+/* ---------- nav ---------- */
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(11,15,20,.93);
+  backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:var(--safeB)}
+.nav .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.nav button{padding:10px 0 11px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10.5px;font-weight:600;color:var(--txt3);letter-spacing:.01em}
+.nav button svg{width:23px;height:23px;stroke-width:1.8;fill:none;stroke:currentColor;
+  stroke-linecap:round;stroke-linejoin:round}
+.nav button.on{color:var(--acc)}
+.vide{text-align:center;color:var(--txt3);font-size:14.5px;padding:34px 16px}
+.sect{font-size:12.5px;color:var(--txt3);font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;margin:22px 0 10px}
+.sect:first-child{margin-top:4px}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- ============ ACCUEIL ============ -->
+<section id="v-accueil" class="vue on">
+  <div class="hd">
+    <div class="sur" id="acc-date"></div>
+    <h1>Corps Libre</h1>
+    <p>Callisthénie, gainage, mobilité et souplesse — chez vous, sans aucun matériel.</p>
+  </div>
+
+  <div id="acc-reprise"></div>
+
+  <div class="sect">Séance express</div>
+  <div class="carte">
+    <div style="font-size:14px;color:var(--txt2);margin-bottom:11px">Choisissez un objectif, je compose la séance.</div>
+    <div class="chips" style="margin:0 0 11px;padding:0">
+      <button class="chip on" data-foc="mixte">Complet</button>
+      <button class="chip" data-foc="gainage">Gainage</button>
+      <button class="chip" data-foc="etirement">Souplesse</button>
+      <button class="chip" data-foc="mobilite">Mobilité</button>
+      <button class="chip" data-foc="callisthenie">Force</button>
+      <button class="chip" data-foc="articulaire">Articulations</button>
+    </div>
+    <div class="chips" style="margin:0 0 13px;padding:0">
+      <button class="chip" data-dur="5">5 min</button>
+      <button class="chip on" data-dur="10">10 min</button>
+      <button class="chip" data-dur="15">15 min</button>
+      <button class="chip" data-dur="20">20 min</button>
+      <button class="chip" data-dur="30">30 min</button>
+    </div>
+    <button class="btn pri" id="go-express">Démarrer la séance</button>
+  </div>
+
+  <div class="sect">Vos programmes</div>
+  <div id="acc-progs"></div>
+
+  <div id="acc-hl" style="display:none;margin-top:18px;text-align:center;font-size:12.5px;
+    color:var(--txt3);line-height:1.5"></div>
+</section>
+
+<!-- ============ PROGRAMMES ============ -->
+<section id="v-prog" class="vue">
+  <div class="hd"><h1>Programmes</h1><p>Des parcours progressifs sur plusieurs semaines.</p></div>
+  <div id="prog-liste"></div>
+</section>
+
+<!-- ============ BIBLIOTHÈQUE ============ -->
+<section id="v-biblio" class="vue">
+  <div class="hd"><h1>Exercices</h1><p id="biblio-n"></p></div>
+  <input class="rech" id="rech" type="search" placeholder="Rechercher un exercice…" autocomplete="off">
+  <div class="chips" id="f-cat"></div>
+  <div class="chips" id="f-zone"></div>
+  <div id="biblio-liste"></div>
+</section>
+
+<!-- ============ SUIVI ============ -->
+<section id="v-suivi" class="vue">
+  <div class="hd"><h1>Suivi</h1><p>Votre régularité et votre historique.</p></div>
+  <div class="stats" id="su-stats"></div>
+  <div class="carte">
+    <div style="font-size:13px;color:var(--txt3);font-weight:600;margin-bottom:9px">10 dernières semaines</div>
+    <div class="jours"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+    <div class="heat" id="su-heat"></div>
+  </div>
+  <div class="sect">Répartition par type</div>
+  <div class="carte" id="su-repart"></div>
+  <div class="sect">Historique</div>
+  <div class="carte" id="su-hist"></div>
+  <button class="btn sm" id="su-reset" style="margin-top:14px;color:var(--txt3)">Effacer tout l'historique</button>
+</section>
+
+</div>
+
+<!-- ============ NAV ============ -->
+<nav class="nav"><div class="in">
+  <button data-vue="accueil" class="on"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg>Accueil</button>
+  <button data-vue="prog"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M8 2.5v4M16 2.5v4M3 10h18M8 14.5h3M8 18h6"/></svg>Programmes</button>
+  <button data-vue="biblio"><svg viewBox="0 0 24 24"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v16H6.5A2.5 2.5 0 0 0 4 22.5z"/><path d="M9 8.5h7M9 12h5"/></svg>Exercices</button>
+  <button data-vue="suivi"><svg viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M6 20v-6M11 20V7M16 20v-9M21 20V11"/></svg>Suivi</button>
+</div></nav>
+
+<!-- ============ DÉTAIL EXERCICE ============ -->
+<div class="det" id="det"><div class="inner">
+  <div class="xclose"><div style="font-weight:600;font-size:14px;color:var(--txt3)">Fiche exercice</div><button id="det-x">✕</button></div>
+  <div id="det-body"></div>
+</div></div>
+
+<!-- ============ DÉTAIL PROGRAMME ============ -->
+<div class="det" id="pdet"><div class="inner">
+  <div class="xclose"><div style="font-weight:600;font-size:14px;color:var(--txt3)">Programme</div><button id="pdet-x">✕</button></div>
+  <div id="pdet-body"></div>
+</div></div>
+
+<!-- ============ LECTEUR DE SÉANCE ============ -->
+<div class="play" id="play">
+  <div class="pbar"><i id="pl-bar" style="width:0"></i></div>
+  <div class="ptop">
+    <span class="pos" id="pl-pos"></span>
+    <div style="display:flex;gap:8px">
+      <button id="pl-voix" title="Voix">🔊</button>
+      <button id="pl-quit">✕</button>
+    </div>
+  </div>
+  <div class="pbody" id="pl-body"></div>
+  <div class="pctl" id="pl-ctl"></div>
+</div>
+
+<script>
+/* ===================================================================
+   CORPS LIBRE — application d'entraînement sans matériel
+   Données d'exercices : Free Exercise DB (domaine public / Unlicense),
+   textes français réécrits et exercices sélectionnés pour un usage
+   à domicile sans équipement.
+   =================================================================== */
+
+const EXOS = [{"id":"Plank","nom":"Planche ventrale","cat":"gainage","zones":["abdos","lombaires","epaules"],"niv":"debutant","type":"temps","defaut":30,"tags":["posture"],"etapes":["Placez-vous face au sol, en appui sur les avant-bras et la pointe des pieds. Les coudes sont sous les épaules.","Serrez les abdominaux et les fessiers pour aligner chevilles, bassin et épaules sur une seule ligne.","Respirez normalement et tenez la position sans laisser le bassin descendre ni remonter."],"conseil":"Si le bas du dos se creuse, raccourcissez le temps plutôt que de tenir en mauvaise position.","muscles":["abdominals"],"sprite":"Plank.webp","cotes":false},{"id":"Side_Bridge","nom":"Planche latérale","cat":"gainage","zones":["abdos","hanches","epaules"],"niv":"debutant","type":"temps","defaut":25,"tags":["posture"],"etapes":["Allongez-vous sur le côté, en appui sur un avant-bras, le coude sous l'épaule.","Décollez le bassin pour aligner chevilles, hanches et épaules.","Tenez la position, puis changez de côté."],"conseil":"Trop difficile ? Posez les genoux au sol en gardant l'alignement cuisses-buste.","muscles":["abdominals"],"sprite":"Side_Bridge.webp","cotes":true},{"id":"Dead_Bug","nom":"Dead bug","cat":"gainage","zones":["abdos","lombaires"],"niv":"debutant","type":"reps","defaut":12,"tags":["posture"],"etapes":["Sur le dos, bras tendus vers le plafond, hanches et genoux fléchis à 90°.","Soufflez pour coller le bas du dos au sol et gardez ce contact pendant tout l'exercice.","Tendez une jambe jusqu'à la frôler le sol, puis revenez. Alternez."],"conseil":"Le repère de réussite est simple : le bas du dos ne doit jamais se décoller du sol.","muscles":["abdominals"],"sprite":"Dead_Bug.webp","cotes":false},{"id":"Bottoms_Up","nom":"Relevé de bassin jambes tendues","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":10,"tags":[],"etapes":["Sur le dos, jambes tendues, bras le long du corps.","Ramenez les genoux vers la poitrine, puis tendez les jambes vers le plafond.","Décollez les fessiers du sol en poussant les pieds vers le haut, puis redescendez lentement."],"conseil":"Le mouvement vient des abdominaux, pas de l'élan des jambes.","muscles":["abdominals"],"sprite":"Bottoms_Up.webp","cotes":false},{"id":"Bent-Knee_Hip_Raise","nom":"Relevé de bassin genoux fléchis","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["Sur le dos, bras le long du corps, genoux fléchis et pieds décollés de quelques centimètres.","Ramenez les genoux vers la poitrine en enroulant le bassin jusqu'à décoller les fesses du sol.","Contractez une seconde, puis redescendez lentement sans reposer les pieds."],"conseil":"Gardez l'angle des genoux constant : seul le bassin bouge.","muscles":["abdominals"],"sprite":"Bent-Knee_Hip_Raise.webp","cotes":false},{"id":"Reverse_Crunch","nom":"Crunch inversé","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["Sur le dos, mains à plat de chaque côté du bassin, genoux fléchis.","Enroulez le bassin pour amener les genoux vers la poitrine, en décollant le bas du dos.","Redescendez lentement en contrôlant."],"conseil":"Ne tirez pas avec les mains : laissez les abdominaux faire le travail.","muscles":["abdominals"],"sprite":"Reverse_Crunch.webp","cotes":true},{"id":"Leg_Pull-In","nom":"Ramené de jambes au sol","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["Assis ou allongé sur le dos, mains en appui, jambes tendues et talons décollés.","Pliez les genoux et ramenez-les vers le buste.","Retendez les jambes sans poser les talons au sol."],"conseil":"Si le bas du dos tire, laissez les talons effleurer le sol entre chaque répétition.","muscles":["abdominals"],"sprite":"Leg_Pull-In.webp","cotes":false},{"id":"Butt-Ups","nom":"Bascule de bassin en planche","cat":"gainage","zones":["abdos","epaules"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["En planche sur les avant-bras, coudes à 90°.","Poussez les fessiers vers le plafond en contractant fortement les abdominaux, jusqu'à former un V inversé.","Redescendez lentement en planche sans creuser le dos."],"conseil":"Expirez en montant, inspirez en redescendant.","muscles":["abdominals"],"sprite":"Butt-Ups.webp","cotes":false},{"id":"Spider_Crawl","nom":"Spider crawl","cat":"gainage","zones":["abdos","hanches","epaules"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["Partez en position de pompe haute, corps gainé.","Amenez un pied vers l'extérieur de la main du même côté, le plus près possible.","Reposez, puis alternez avec l'autre jambe."],"conseil":"Gardez le bassin bas : c'est ce qui travaille les hanches.","muscles":["abdominals"],"sprite":"Spider_Crawl.webp","cotes":false},{"id":"Push_Up_to_Side_Plank","nom":"Pompe avec rotation en planche latérale","cat":"gainage","zones":["abdos","poitrine","epaules"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["Réalisez une pompe complète, corps gainé.","En haut, pivotez sur un côté en levant un bras vers le plafond, en planche latérale.","Revenez au sol et alternez le côté à chaque pompe."],"conseil":"Suivez votre main du regard pour accompagner la rotation du buste.","muscles":["chest"],"sprite":"Push_Up_to_Side_Plank.webp","cotes":false},{"id":"Russian_Twist","nom":"Russian twist","cat":"gainage","zones":["abdos"],"niv":"intermediaire","type":"reps","defaut":16,"tags":[],"etapes":["Assis, genoux fléchis, buste incliné en arrière, pieds décollés si possible.","Gardez le dos droit et tournez le buste pour amener les mains d'un côté puis de l'autre.","Alternez de façon contrôlée, sans élan."],"conseil":"La rotation vient du buste, pas des bras.","muscles":["abdominals"],"sprite":"Russian_Twist.webp","cotes":false},{"id":"Cross-Body_Crunch","nom":"Crunch croisé","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":16,"tags":[],"etapes":["Sur le dos, genoux fléchis, mains posées sans tirer derrière la tête.","Enroulez le buste en amenant un coude et l'épaule vers le genou opposé, qui vient à sa rencontre.","Redescendez et alternez."],"conseil":"Cherchez à rapprocher l'épaule du genou, pas seulement le coude.","muscles":["abdominals"],"sprite":"Cross-Body_Crunch.webp","cotes":false},{"id":"Elbow_to_Knee","nom":"Coude-genou","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":16,"tags":[],"etapes":["Sur le dos, une cheville posée sur le genou opposé, mains derrière la tête sans tirer.","Enroulez le buste pour amener le coude vers le genou relevé.","Redescendez lentement, puis changez de côté."],"conseil":"Gardez les coudes ouverts pour ne pas tirer sur la nuque.","muscles":["abdominals"],"sprite":"Elbow_to_Knee.webp","cotes":true},{"id":"Oblique_Crunches_-_On_The_Floor","nom":"Crunch oblique au sol","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":14,"tags":[],"etapes":["Sur le dos, basculez les deux genoux d'un côté, buste à plat.","Enroulez le buste vers le haut, épaules décollées de quelques centimètres.","Redescendez lentement, puis changez de côté."],"conseil":"Petite amplitude, contraction marquée : inutile de monter haut.","muscles":["abdominals"],"sprite":"Oblique_Crunches_-_On_The_Floor.webp","cotes":true},{"id":"Tuck_Crunch","nom":"Crunch jambes relevées","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":14,"tags":[],"etapes":["Sur le dos, jambes relevées et genoux fléchis à 90°, mollets parallèles au sol.","Enroulez le buste vers les genoux en soufflant.","Redescendez sans reposer la tête complètement."],"conseil":"Gardez les jambes immobiles : c'est le buste qui monte.","muscles":["abdominals"],"sprite":"Tuck_Crunch.webp","cotes":false},{"id":"Sit-Up","nom":"Sit-up complet","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["Sur le dos, genoux fléchis, pieds au sol, mains sur la poitrine ou aux tempes.","Enroulez la colonne pour monter le buste jusqu'à la verticale.","Redescendez lentement, vertèbre par vertèbre."],"conseil":"Si vous devez tirer sur la nuque pour monter, passez au crunch classique.","muscles":["abdominals"],"sprite":"Sit-Up.webp","cotes":false},{"id":"3_4_Sit-Up","nom":"Sit-up aux trois quarts","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":14,"tags":[],"etapes":["Sur le dos, genoux fléchis, mains aux tempes.","Montez le buste jusqu'à la verticale.","Redescendez seulement aux trois quarts, sans reposer les épaules, et repartez."],"conseil":"Ne pas relâcher en bas maintient la tension en continu sur les abdominaux.","muscles":["abdominals"],"sprite":"3_4_Sit-Up.webp","cotes":false},{"id":"Air_Bike","nom":"Pédalage croisé","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":20,"tags":[],"etapes":["Sur le dos, bas du dos plaqué au sol, épaules décollées, jambes relevées à 90°.","Pédalez lentement : tendez une jambe en ramenant l'autre genou vers vous.","Amenez le coude opposé vers ce genou en soufflant, puis alternez."],"conseil":"Lentement et amplement : la vitesse fait perdre tout le bénéfice.","muscles":["abdominals"],"sprite":"Air_Bike.webp","cotes":false},{"id":"Alternate_Heel_Touchers","nom":"Touches de talons","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":20,"tags":[],"etapes":["Sur le dos, genoux fléchis, pieds au sol écartés, bras le long du corps.","Décollez légèrement les épaules et glissez une main vers le talon du même côté.","Revenez au centre et alternez."],"conseil":"Les épaules restent décollées pendant toute la série.","muscles":["abdominals"],"sprite":"Alternate_Heel_Touchers.webp","cotes":false},{"id":"Cocoons","nom":"Cocon","cat":"gainage","zones":["abdos"],"niv":"intermediaire","type":"reps","defaut":12,"tags":[],"etapes":["Sur le dos, jambes tendues et bras tendus derrière la tête.","Ramenez simultanément les genoux vers la poitrine et les bras vers l'avant, en décollant les fessiers.","Revenez en position étirée de façon contrôlée."],"conseil":"Mouvement complet mais lent : il sollicite toute la sangle abdominale.","muscles":["abdominals"],"sprite":"Cocoons.webp","cotes":false},{"id":"Crunch_-_Hands_Overhead","nom":"Crunch bras tendus au-dessus de la tête","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["Sur le dos, genoux fléchis, bras tendus au-dessus de la tête, mains croisées.","Enroulez le buste en gardant les bras alignés avec la tête, sans les avancer.","Décollez les omoplates, marquez une seconde, puis redescendez."],"conseil":"Bras tendus, l'exercice devient nettement plus dur qu'un crunch classique.","muscles":["abdominals"],"sprite":"Crunch_-_Hands_Overhead.webp","cotes":false},{"id":"Jackknife_Sit-Up","nom":"Sit-up en V","cat":"gainage","zones":["abdos"],"niv":"intermediaire","type":"reps","defaut":12,"tags":[],"etapes":["Sur le dos, bras tendus derrière la tête, jambes tendues.","Montez simultanément les bras et les jambes pour venir toucher les pieds, en formant un V.","Redescendez lentement sans relâcher complètement."],"conseil":"Jambes fléchies pour commencer, tendues quand c'est maîtrisé.","muscles":["abdominals"],"sprite":"Jackknife_Sit-Up.webp","cotes":false},{"id":"Janda_Sit-Up","nom":"Sit-up Janda","cat":"gainage","zones":["abdos"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["Sur le dos, genoux fléchis, talons ancrés au sol.","Tirez activement les talons vers les fessiers pour contracter les ischio-jambiers avant de monter.","Enroulez le buste en gardant cette contraction, puis redescendez."],"conseil":"Cette contraction préalable neutralise les fléchisseurs de hanche et cible mieux les abdominaux.","muscles":["abdominals"],"sprite":"Janda_Sit-Up.webp","cotes":false},{"id":"Frog_Sit-Ups","nom":"Sit-up grenouille","cat":"gainage","zones":["abdos"],"niv":"intermediaire","type":"reps","defaut":12,"tags":[],"etapes":["Sur le dos, plantes de pieds jointes et genoux ouverts sur les côtés.","Mains aux tempes, enroulez le buste vers les genoux.","Redescendez lentement."],"conseil":"L'ouverture des hanches limite l'aide des cuisses et isole mieux les abdominaux.","muscles":["abdominals"],"sprite":"Frog_Sit-Ups.webp","cotes":false},{"id":"Side_Jackknife","nom":"Ciseau latéral","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["Allongé sur le côté, jambes légèrement fléchies, main haute derrière la tête.","Rapprochez le coude et le genou du même côté en contractant le flanc.","Revenez lentement, puis changez de côté."],"conseil":"Cherchez la sensation de raccourcissement du flanc, pas l'amplitude.","muscles":["abdominals"],"sprite":"Side_Jackknife.webp","cotes":true},{"id":"Scissor_Kick","nom":"Ciseaux de jambes","cat":"gainage","zones":["abdos","hanches"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Sur le dos, mains sous les fessiers, bas du dos plaqué au sol.","Décollez les deux jambes tendues de quelques centimètres.","Croisez et décroisez les jambes en alternance, sans toucher le sol."],"conseil":"Si le bas du dos se creuse, montez les jambes plus haut.","muscles":["abdominals"],"sprite":"Scissor_Kick.webp","cotes":false},{"id":"Stomach_Vacuum","nom":"Vacuum abdominal","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"temps","defaut":15,"tags":["posture"],"etapes":["À quatre pattes ou debout, expirez tout l'air de vos poumons.","Rentrez le ventre en aspirant le nombril vers la colonne, le plus loin possible.","Tenez sans respirer quelques secondes, puis relâchez et reprenez votre souffle."],"conseil":"Travail du transverse profond : il soutient la posture et affine la taille.","muscles":["abdominals"],"sprite":"Stomach_Vacuum.webp","cotes":false},{"id":"Lower_Back_Curl","nom":"Enroulement lombaire","cat":"gainage","zones":["lombaires","abdos"],"niv":"debutant","type":"reps","defaut":10,"tags":["posture"],"etapes":["Sur le dos, genoux ramenés vers la poitrine, mains sur les tibias.","Enroulez doucement le bas du dos en basculant le bassin vers vous.","Relâchez et recommencez lentement."],"conseil":"Mouvement de mobilisation douce : à faire en début de séance ou le matin.","muscles":["abdominals"],"sprite":"Lower_Back_Curl.webp","cotes":false},{"id":"Superman","nom":"Superman","cat":"gainage","zones":["lombaires","fessiers","epaules"],"niv":"debutant","type":"temps","defaut":20,"tags":["posture"],"etapes":["À plat ventre, bras tendus devant et jambes tendues.","Décollez simultanément bras, poitrine et jambes du sol en contractant les fessiers et le bas du dos.","Tenez quelques secondes, puis redescendez lentement."],"conseil":"Regardez le sol pour garder la nuque dans le prolongement du dos.","muscles":["lower back"],"sprite":"Superman.webp","cotes":false},{"id":"Toe_Touchers","nom":"Touches de pointes de pieds","cat":"gainage","zones":["abdos"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["Sur le dos, jambes tendues à la verticale, bras tendus vers les pieds.","Enroulez le buste pour venir toucher les pointes de pieds.","Redescendez lentement en gardant les jambes verticales."],"conseil":"Si vous n'atteignez pas les pieds, montez simplement le plus haut possible.","muscles":["abdominals"],"sprite":"Toe_Touchers.webp","cotes":false},{"id":"Pushups","nom":"Pompes","cat":"callisthenie","zones":["poitrine","bras","epaules","abdos"],"niv":"debutant","type":"reps","defaut":10,"tags":[],"etapes":["En appui sur les mains écartées à largeur d'épaules et la pointe des pieds, corps gainé et aligné.","Descendez en pliant les coudes jusqu'à ce que la poitrine soit proche du sol.","Poussez pour remonter en position bras tendus, sans creuser le dos."],"conseil":"Trop difficile ? Posez les genoux au sol, ou placez les mains sur une surface surélevée.","muscles":["chest"],"sprite":"Pushups.webp","cotes":false},{"id":"Clock_Push-Up","nom":"Pompes en horloge","cat":"callisthenie","zones":["poitrine","bras","epaules"],"niv":"avance","type":"reps","defaut":8,"tags":[],"etapes":["Position de pompe classique, corps gainé.","Faites une pompe, puis déplacez vos appuis d'un quart de tour autour d'un point imaginaire.","Enchaînez les pompes en tournant progressivement jusqu'à revenir au point de départ."],"conseil":"Avancez par petits déplacements : la difficulté vient du maintien du gainage en rotation.","muscles":["chest"],"sprite":"Clock_Push-Up.webp","cotes":false},{"id":"Single-Arm_Push-Up","nom":"Pompe à un bras","cat":"callisthenie","zones":["poitrine","bras","abdos"],"niv":"avance","type":"reps","defaut":4,"tags":[],"etapes":["Position de pompe, pieds largement écartés pour la stabilité, une main dans le dos.","Descendez sur un seul bras en gardant le buste le plus face au sol possible.","Poussez pour remonter, puis changez de bras."],"conseil":"Étape intermédiaire indispensable : la pompe archer, où le second bras reste tendu sur le côté.","muscles":["chest"],"sprite":"Single-Arm_Push-Up.webp","cotes":true},{"id":"Body-Up","nom":"Passage avant-bras / mains","cat":"callisthenie","zones":["bras","epaules","abdos"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["En planche sur les avant-bras, corps gainé et buste droit.","Poussez fort sur les paumes pour tendre les bras et monter en position de pompe haute.","Redescendez lentement sur les avant-bras, sans casser l'alignement."],"conseil":"Excellent pour les triceps sans aucun matériel.","muscles":["triceps"],"sprite":"Body-Up.webp","cotes":false},{"id":"Dips_-_Triceps_Version","nom":"Dips au sol (triceps)","cat":"callisthenie","zones":["bras","epaules"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["Assis au sol, mains posées derrière les fessiers, doigts vers l'avant, jambes tendues devant.","Décollez les fessiers et descendez en pliant les coudes vers l'arrière.","Poussez pour remonter en tendant les bras."],"conseil":"Gardez les coudes serrés vers l'arrière, pas écartés sur les côtés.","muscles":["triceps"],"sprite":"Dips_-_Triceps_Version.webp","cotes":false},{"id":"Bodyweight_Squat","nom":"Squat au poids du corps","cat":"callisthenie","zones":["cuisses","fessiers"],"niv":"debutant","type":"reps","defaut":15,"tags":[],"etapes":["Debout, pieds écartés à largeur de bassin, mains devant ou derrière la tête.","Descendez en poussant les fesses vers l'arrière, poitrine haute, genoux dans l'axe des pieds.","Descendez aussi bas que votre mobilité le permet, puis remontez en poussant dans les talons."],"conseil":"Si les talons se décollent, écartez un peu plus les pieds ou travaillez la mobilité de cheville.","muscles":["quadriceps"],"sprite":"Bodyweight_Squat.webp","cotes":false},{"id":"Sit_Squats","nom":"Squat assis-debout","cat":"callisthenie","zones":["cuisses","fessiers"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["Debout dos à une chaise ou un mur, pieds à largeur de bassin.","Descendez lentement jusqu'à effleurer l'assise, sans vous asseoir complètement.","Remontez en poussant dans les talons."],"conseil":"Idéal pour apprendre la descente du squat en toute sécurité.","muscles":["quadriceps"],"sprite":"Sit_Squats.webp","cotes":false},{"id":"Split_Squats","nom":"Fente statique","cat":"callisthenie","zones":["cuisses","fessiers","hanches"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["Debout, un pied avancé, l'autre reculé d'un grand pas, buste droit.","Descendez à la verticale jusqu'à ce que le genou arrière approche le sol.","Remontez en poussant dans le pied avant, puis changez de jambe."],"conseil":"Le genou avant reste au-dessus du pied, jamais en avant des orteils.","muscles":["hamstrings"],"sprite":"Split_Squats.webp","cotes":true},{"id":"Freehand_Jump_Squat","nom":"Squat sauté","cat":"callisthenie","zones":["cuisses","fessiers","mollets"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["Debout, pieds à largeur de bassin, mains derrière la tête ou devant.","Descendez en demi-squat, puis détendez-vous pour sauter le plus haut possible.","Amortissez la réception en pliant les genoux et enchaînez."],"conseil":"Évitez si vous avez des douleurs de genou : remplacez par un squat classique.","muscles":["quadriceps"],"sprite":"Freehand_Jump_Squat.webp","cotes":false},{"id":"Butt_Lift_Bridge","nom":"Pont fessier","cat":"callisthenie","zones":["fessiers","ischios","lombaires"],"niv":"debutant","type":"reps","defaut":15,"tags":["posture"],"etapes":["Sur le dos, genoux fléchis, pieds à plat écartés à largeur de bassin, bras le long du corps.","Poussez dans les talons pour décoller le bassin jusqu'à aligner cuisses et buste.","Serrez les fessiers une seconde en haut, puis redescendez lentement."],"conseil":"Si vous sentez le bas du dos plutôt que les fessiers, rapprochez les talons et serrez plus fort en haut.","muscles":["glutes"],"sprite":"Butt_Lift_Bridge.webp","cotes":false},{"id":"Single_Leg_Glute_Bridge","nom":"Pont fessier unilatéral","cat":"callisthenie","zones":["fessiers","ischios"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["Sur le dos, un pied au sol genou fléchi, l'autre jambe tendue vers le plafond.","Poussez dans le talon au sol pour décoller le bassin, en gardant le bassin horizontal.","Redescendez lentement, puis changez de jambe."],"conseil":"Le bassin ne doit pas basculer d'un côté : c'est le signe que ça travaille bien.","muscles":["glutes"],"sprite":"Single_Leg_Glute_Bridge.webp","cotes":true},{"id":"Glute_Kickback","nom":"Extension de hanche à quatre pattes","cat":"callisthenie","zones":["fessiers","lombaires"],"niv":"debutant","type":"reps","defaut":14,"tags":[],"etapes":["À quatre pattes, mains sous les épaules, dos neutre.","Tendez une jambe vers l'arrière et montez-la à hauteur de hanche en serrant le fessier.","Redescendez sans poser le genou, puis changez de côté après la série."],"conseil":"Ne cambrez pas le bas du dos pour monter plus haut : l'amplitude utile est courte.","muscles":["glutes"],"sprite":"Glute_Kickback.webp","cotes":true},{"id":"Floor_Glute-Ham_Raise","nom":"Nordic curl au sol","cat":"callisthenie","zones":["ischios","fessiers"],"niv":"avance","type":"reps","defaut":6,"tags":[],"etapes":["À genoux, chevilles bloquées sous un meuble lourd ou tenues par un partenaire.","Descendez le buste vers l'avant le plus lentement possible, corps aligné, en freinant avec les ischio-jambiers.","Rattrapez-vous avec les mains, puis poussez pour revenir."],"conseil":"Exercice très exigeant : commencez par descendre seulement un quart de l'amplitude.","muscles":["hamstrings"],"sprite":"Floor_Glute-Ham_Raise.webp","cotes":false},{"id":"Prone_Manual_Hamstring","nom":"Flexion de jambe résistée","cat":"callisthenie","zones":["ischios"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["À plat ventre, jambes tendues.","Fléchissez un genou pour amener le talon vers la fesse en contractant volontairement.","Redescendez lentement en résistant, puis changez de jambe."],"conseil":"Faute de charge, c'est la lenteur et la contraction volontaire qui créent l'intensité.","muscles":["hamstrings"],"sprite":"Prone_Manual_Hamstring.webp","cotes":true},{"id":"Handstand_Push-Ups","nom":"Pompe en équilibre sur les mains","cat":"callisthenie","zones":["epaules","bras","abdos"],"niv":"avance","type":"reps","defaut":3,"tags":[],"etapes":["En équilibre sur les mains, talons appuyés contre un mur pour la stabilité.","Descendez en pliant les coudes jusqu'à approcher la tête du sol.","Poussez pour remonter bras tendus."],"conseil":"À n'aborder qu'après avoir maîtrisé la pompe piquée et l'équilibre au mur.","muscles":["shoulders"],"sprite":"Handstand_Push-Ups.webp","cotes":false},{"id":"Isometric_Wipers","nom":"Poussée isométrique poitrine","cat":"callisthenie","zones":["poitrine","bras"],"niv":"debutant","type":"temps","defaut":20,"tags":[],"etapes":["Debout, paumes jointes devant la poitrine, coudes ouverts.","Poussez les mains l'une contre l'autre en contractant la poitrine, puis déplacez-les lentement vers le haut et vers le bas.","Gardez la pression constante pendant tout le déplacement."],"conseil":"Respirez normalement : ne bloquez pas la respiration sur l'effort.","muscles":["chest"],"sprite":"Isometric_Wipers.webp","cotes":false},{"id":"Isometric_Chest_Squeezes","nom":"Serrage isométrique de poitrine","cat":"callisthenie","zones":["poitrine"],"niv":"debutant","type":"temps","defaut":20,"tags":[],"etapes":["Assis ou debout, bras fléchis à 90°, paumes jointes devant la poitrine.","Poussez les paumes l'une contre l'autre en contractant progressivement la poitrine.","Tenez la contraction, puis relâchez lentement."],"conseil":"Montez en pression progressivement plutôt que d'un coup.","muscles":["chest"],"sprite":"Isometric_Chest_Squeezes.webp","cotes":false},{"id":"Cat_Stretch","nom":"Chat-vache","cat":"mobilite","zones":["lombaires","dos","abdos"],"niv":"debutant","type":"reps","defaut":12,"tags":["posture","reveil"],"etapes":["À quatre pattes, mains sous les épaules, genoux sous les hanches.","Inspirez en creusant le dos et en regardant légèrement vers le haut.","Expirez en arrondissant le dos vers le plafond et en rentrant le menton. Alternez lentement."],"conseil":"Le meilleur exercice de réveil du dos : à faire chaque matin, même hors séance.","muscles":["lower back"],"sprite":"Cat_Stretch.webp","cotes":false},{"id":"Worlds_Greatest_Stretch","nom":"Fente avec rotation (world's greatest stretch)","cat":"mobilite","zones":["hanches","dos","ischios","epaules"],"niv":"intermediaire","type":"reps","defaut":8,"tags":["echauffement"],"etapes":["Partez en grande fente avant, les deux mains au sol de part et d'autre du pied avant.","Posez le coude du côté intérieur vers le sol pour ouvrir la hanche.","Puis ouvrez le buste en levant le bras intérieur vers le plafond, suivez la main du regard. Changez de côté."],"conseil":"Un seul exercice qui mobilise hanches, dos, ischio-jambiers et épaules : parfait en échauffement.","muscles":["hamstrings"],"sprite":"Worlds_Greatest_Stretch.webp","cotes":true},{"id":"Inchworm","nom":"Chenille","cat":"mobilite","zones":["ischios","epaules","abdos"],"niv":"debutant","type":"reps","defaut":8,"tags":["echauffement"],"etapes":["Debout, penchez-vous pour poser les mains au sol, jambes aussi tendues que possible.","Avancez les mains pas à pas jusqu'en position de planche.","Puis ramenez les pieds vers les mains à petits pas et redressez-vous."],"conseil":"Pliez légèrement les genoux à la descente si les ischio-jambiers sont raides.","muscles":["hamstrings"],"sprite":"Inchworm.webp","cotes":false},{"id":"Groiners","nom":"Groiners","cat":"mobilite","zones":["hanches","adducteurs"],"niv":"intermediaire","type":"reps","defaut":10,"tags":["echauffement"],"etapes":["En position de planche haute, mains sous les épaules.","Sautez pour amener les deux pieds vers l'extérieur des mains, en position accroupie.","Repartez en planche d'un saut et enchaînez."],"conseil":"Version douce : avancez les pieds un par un en marchant au lieu de sauter.","muscles":["adductors"],"sprite":"Groiners.webp","cotes":false},{"id":"Dynamic_Back_Stretch","nom":"Ouverture dynamique du dos","cat":"mobilite","zones":["dos","epaules"],"niv":"debutant","type":"reps","defaut":12,"tags":["echauffement","posture"],"etapes":["Debout, bras tendus devant vous, mains croisées.","Poussez les mains loin devant en arrondissant le haut du dos et en écartant les omoplates.","Revenez en ouvrant la poitrine et en serrant les omoplates. Alternez en rythme."],"conseil":"Excellent entre deux périodes assises devant un écran.","muscles":["lats"],"sprite":"Dynamic_Back_Stretch.webp","cotes":false},{"id":"Dynamic_Chest_Stretch","nom":"Ouverture dynamique de la poitrine","cat":"mobilite","zones":["poitrine","epaules"],"niv":"debutant","type":"reps","defaut":12,"tags":["echauffement","posture"],"etapes":["Debout, bras tendus à l'horizontale devant vous.","Ouvrez les bras largement vers l'arrière en gonflant la poitrine.","Ramenez-les devant en les croisant, puis recommencez en rythme régulier."],"conseil":"Contrebalance directement la position voûtée du travail sur ordinateur.","muscles":["chest"],"sprite":"Dynamic_Chest_Stretch.webp","cotes":false},{"id":"Windmills","nom":"Moulins","cat":"mobilite","zones":["dos","hanches","ischios"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["Debout, pieds largement écartés, bras tendus en croix.","Penchez le buste vers l'avant et pivotez pour amener une main vers le pied opposé.","Remontez et alternez de l'autre côté."],"conseil":"Gardez les jambes tendues mais pas verrouillées, et le dos long.","muscles":["abductors"],"sprite":"Windmills.webp","cotes":false},{"id":"Iron_Crosses_stretch","nom":"Croix de fer","cat":"mobilite","zones":["hanches","dos","cuisses"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["Allongé sur le dos, bras en croix, jambes tendues.","Amenez une jambe tendue en diagonale vers la main opposée, en laissant le bassin pivoter.","Gardez les épaules au sol, revenez, puis changez de côté."],"conseil":"Cherchez à garder les deux omoplates au sol : c'est ça qui crée la mobilisation.","muscles":["quadriceps"],"sprite":"Iron_Crosses_stretch.webp","cotes":true},{"id":"Lying_Crossover","nom":"Croisé allongé","cat":"mobilite","zones":["hanches","dos","fessiers"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Sur le dos, bras en croix, une jambe fléchie.","Laissez tomber le genou fléchi de l'autre côté du corps en gardant les épaules au sol.","Respirez profondément, tenez, puis changez de côté."],"conseil":"Tournez la tête du côté opposé au genou pour accentuer la rotation.","muscles":["abductors"],"sprite":"Lying_Crossover.webp","cotes":true},{"id":"Crossover_Reverse_Lunge","nom":"Fente arrière croisée","cat":"mobilite","zones":["hanches","fessiers","cuisses"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["Debout, pieds à largeur de bassin.","Reculez une jambe en diagonale derrière l'autre et descendez en fente.","Remontez et alternez les jambes."],"conseil":"Mobilise les hanches dans un plan rarement travaillé : allez-y progressivement.","muscles":["lower back"],"sprite":"Crossover_Reverse_Lunge.webp","cotes":false},{"id":"Front_Leg_Raises","nom":"Montées de jambe avant","cat":"mobilite","zones":["ischios","hanches"],"niv":"debutant","type":"reps","defaut":12,"tags":["echauffement"],"etapes":["Debout, une main en appui sur un mur pour l'équilibre.","Balancez une jambe tendue vers l'avant, aussi haut que le permet votre souplesse, sans forcer.","Laissez redescendre et enchaînez, puis changez de jambe."],"conseil":"Amplitude croissante au fil des répétitions : ne partez jamais au maximum.","muscles":["hamstrings"],"sprite":"Front_Leg_Raises.webp","cotes":true},{"id":"Rear_Leg_Raises","nom":"Montées de jambe arrière","cat":"mobilite","zones":["fessiers","cuisses","hanches"],"niv":"debutant","type":"reps","defaut":12,"tags":["echauffement"],"etapes":["Debout, une main en appui sur un mur.","Balancez une jambe tendue vers l'arrière en gardant le buste droit.","Revenez et enchaînez, puis changez de jambe."],"conseil":"Ne cambrez pas le bas du dos pour gagner de l'amplitude.","muscles":["quadriceps"],"sprite":"Rear_Leg_Raises.webp","cotes":true},{"id":"Side_Leg_Raises","nom":"Montées de jambe latérales","cat":"mobilite","zones":["adducteurs","hanches"],"niv":"debutant","type":"reps","defaut":12,"tags":["echauffement"],"etapes":["Debout, face à un mur, mains en appui.","Balancez une jambe tendue sur le côté, vers l'extérieur, puis laissez-la revenir devant l'autre.","Enchaînez en rythme, puis changez de jambe."],"conseil":"Gardez le buste face au mur : seule la jambe bouge.","muscles":["adductors"],"sprite":"Side_Leg_Raises.webp","cotes":true},{"id":"Pelvic_Tilt_Into_Bridge","nom":"Bascule de bassin vers le pont","cat":"mobilite","zones":["lombaires","fessiers"],"niv":"debutant","type":"reps","defaut":10,"tags":["posture"],"etapes":["Sur le dos, genoux fléchis, pieds à plat.","Basculez le bassin pour plaquer le bas du dos au sol.","En gardant cette bascule, déroulez le bassin vers le haut vertèbre par vertèbre jusqu'au pont, puis redescendez de même."],"conseil":"Cherchez à sentir chaque vertèbre quitter le sol puis y revenir.","muscles":["lower back"],"sprite":"Pelvic_Tilt_Into_Bridge.webp","cotes":false},{"id":"Standing_Pelvic_Tilt","nom":"Bascule de bassin debout","cat":"mobilite","zones":["lombaires","abdos"],"niv":"debutant","type":"reps","defaut":12,"tags":["posture"],"etapes":["Debout, genoux légèrement fléchis, mains sur les hanches.","Basculez le bassin vers l'avant en creusant légèrement le bas du dos.","Puis basculez-le vers l'arrière en rentrant le ventre et en effaçant la cambrure. Alternez lentement."],"conseil":"Exercice clé pour apprendre à contrôler la position de son bassin au quotidien.","muscles":["lower back"],"sprite":"Standing_Pelvic_Tilt.webp","cotes":false},{"id":"Frog_Hops","nom":"Sauts de grenouille","cat":"mobilite","zones":["hanches","cuisses","adducteurs"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["Accroupi, pieds écartés plus large que les épaules, mains au sol entre les jambes.","Poussez pour sauter vers l'avant en gardant la position basse à la réception.","Enchaînez quelques sauts, puis revenez."],"conseil":"Si la position basse est inconfortable, remplacez par des squats profonds tenus.","muscles":["quadriceps"],"sprite":"Frog_Hops.webp","cotes":false},{"id":"Spinal_Stretch","nom":"Étirement de la colonne","cat":"mobilite","zones":["dos","lombaires"],"niv":"debutant","type":"temps","defaut":30,"tags":["posture"],"etapes":["Assis au sol, jambes croisées, mains sur les genoux.","Arrondissez le dos en rentrant le menton et en poussant le milieu du dos vers l'arrière.","Respirez profondément et laissez le dos s'ouvrir à chaque expiration."],"conseil":"Imaginez quelqu'un qui tire doucement entre vos omoplates vers l'arrière.","muscles":["middle back"],"sprite":"Spinal_Stretch.webp","cotes":false},{"id":"Isometric_Neck_Exercise_-_Front_And_Back","nom":"Renforcement isométrique du cou (avant/arrière)","cat":"articulaire","zones":["cou"],"niv":"debutant","type":"temps","defaut":15,"tags":["posture"],"etapes":["Assis ou debout, placez une paume sur le front.","Poussez la tête contre la main sans qu'elle bouge, pendant quelques secondes, puis relâchez.","Répétez en plaçant les mains derrière la tête et en poussant vers l'arrière."],"conseil":"La tête ne doit pas bouger : la résistance égale exactement la poussée.","muscles":["neck"],"sprite":"Isometric_Neck_Exercise_-_Front_And_Back.webp","cotes":false},{"id":"Isometric_Neck_Exercise_-_Sides","nom":"Renforcement isométrique du cou (côtés)","cat":"articulaire","zones":["cou"],"niv":"debutant","type":"temps","defaut":15,"tags":["posture"],"etapes":["Placez une paume sur le côté de la tête, au-dessus de l'oreille.","Poussez la tête contre la main sans qu'elle bouge, quelques secondes.","Relâchez et répétez de l'autre côté."],"conseil":"Très utile contre les tensions de nuque liées au travail sur écran.","muscles":["neck"],"sprite":"Isometric_Neck_Exercise_-_Sides.webp","cotes":false},{"id":"Shoulder_Circles","nom":"Cercles d'épaules","cat":"articulaire","zones":["epaules"],"niv":"debutant","type":"reps","defaut":15,"tags":["echauffement","posture"],"etapes":["Debout, bras relâchés le long du corps.","Dessinez de grands cercles avec les épaules vers l'arrière, en amplitude maximale.","Puis inversez le sens pour faire des cercles vers l'avant."],"conseil":"À faire avant tout exercice sollicitant les épaules.","muscles":["shoulders"],"sprite":"Shoulder_Circles.webp","cotes":false},{"id":"Arm_Circles","nom":"Cercles de bras","cat":"articulaire","zones":["epaules"],"niv":"debutant","type":"reps","defaut":15,"tags":["echauffement"],"etapes":["Debout, bras tendus à l'horizontale sur les côtés.","Dessinez de petits cercles qui s'agrandissent progressivement, vers l'avant.","Inversez ensuite le sens de rotation."],"conseil":"Commencez petit et agrandissez : c'est ce qui échauffe l'articulation en douceur.","muscles":["shoulders"],"sprite":"Arm_Circles.webp","cotes":false},{"id":"Elbow_Circles","nom":"Cercles de coudes","cat":"articulaire","zones":["bras","epaules"],"niv":"debutant","type":"reps","defaut":15,"tags":["echauffement"],"etapes":["Debout, bras tendus sur les côtés, coudes fléchis à 90°.","Faites tourner les avant-bras pour dessiner des cercles avec les coudes.","Changez de sens après une série."],"conseil":"Mobilise la coiffe des rotateurs, souvent négligée.","muscles":["shoulders"],"sprite":"Elbow_Circles.webp","cotes":false},{"id":"Wrist_Circles","nom":"Cercles de poignets","cat":"articulaire","zones":["poignets"],"niv":"debutant","type":"reps","defaut":15,"tags":["echauffement"],"etapes":["Bras tendus devant vous, mains fermées en poing léger.","Dessinez des cercles avec les poignets dans un sens.","Puis inversez le sens de rotation."],"conseil":"Indispensable avant les pompes ou tout appui sur les mains.","muscles":["forearms"],"sprite":"Wrist_Circles.webp","cotes":false},{"id":"Knee_Circles","nom":"Cercles de genoux","cat":"articulaire","zones":["genoux","mollets"],"niv":"debutant","type":"reps","defaut":15,"tags":["echauffement"],"etapes":["Debout, pieds serrés, mains posées sur les genoux légèrement fléchis.","Dessinez des cercles avec les genoux dans un sens.","Puis inversez le sens."],"conseil":"Amplitude modérée et sans douleur : il s'agit de lubrifier l'articulation, pas de l'étirer.","muscles":["calves"],"sprite":"Knee_Circles.webp","cotes":false},{"id":"Standing_Hip_Circles","nom":"Cercles de hanche debout","cat":"articulaire","zones":["hanches"],"niv":"debutant","type":"reps","defaut":12,"tags":["echauffement"],"etapes":["Debout, une main en appui sur un mur, un genou relevé à hauteur de hanche.","Dessinez de grands cercles avec le genou, en ouvrant la hanche vers l'extérieur.","Changez de sens, puis de jambe."],"conseil":"Le buste reste immobile : seule la hanche travaille.","muscles":["abductors"],"sprite":"Standing_Hip_Circles.webp","cotes":false},{"id":"Hip_Circles_prone","nom":"Cercles de hanche à quatre pattes","cat":"articulaire","zones":["hanches","fessiers"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["À quatre pattes, dos neutre.","Levez un genou sur le côté et dessinez de grands cercles avec la cuisse.","Changez de sens, puis de jambe."],"conseil":"Gardez le bassin stable, sans basculer vers le côté opposé.","muscles":["abductors"],"sprite":"Hip_Circles_prone.webp","cotes":false},{"id":"Shoulder_Raise","nom":"Haussement d'épaules","cat":"articulaire","zones":["epaules","cou"],"niv":"debutant","type":"reps","defaut":15,"tags":["posture"],"etapes":["Debout, bras relâchés.","Montez les épaules vers les oreilles aussi haut que possible.","Relâchez complètement en laissant tomber les épaules."],"conseil":"Le relâchement compte autant que la montée : laissez vraiment tomber.","muscles":["shoulders"],"sprite":"Shoulder_Raise.webp","cotes":false},{"id":"Elbows_Back","nom":"Coudes en arrière","cat":"articulaire","zones":["poitrine","epaules","dos"],"niv":"debutant","type":"reps","defaut":12,"tags":["posture"],"etapes":["Debout, mains derrière la tête, coudes ouverts.","Tirez les coudes vers l'arrière en serrant les omoplates et en ouvrant la poitrine.","Relâchez légèrement puis recommencez."],"conseil":"Un des exercices les plus efficaces contre les épaules enroulées vers l'avant.","muscles":["chest"],"sprite":"Elbows_Back.webp","cotes":false},{"id":"Kneeling_Forearm_Stretch","nom":"Étirement des poignets à genoux","cat":"articulaire","zones":["poignets","bras"],"niv":"debutant","type":"temps","defaut":25,"tags":[],"etapes":["À genoux, posez les mains au sol devant vous, doigts tournés vers vos genoux.","Reculez doucement le bassin pour augmenter l'étirement de la face interne des avant-bras.","Respirez et tenez, puis relâchez progressivement."],"conseil":"À faire après tout travail en appui sur les mains.","muscles":["forearms"],"sprite":"Kneeling_Forearm_Stretch.webp","cotes":false},{"id":"Childs_Pose","nom":"Posture de l'enfant","cat":"etirement","zones":["lombaires","dos","epaules"],"niv":"debutant","type":"temps","defaut":40,"tags":["recuperation","posture"],"etapes":["À genoux, asseyez-vous sur les talons et posez le front vers le sol.","Tendez les bras loin devant vous et laissez la poitrine descendre.","Respirez profondément et laissez le dos se relâcher à chaque expiration."],"conseil":"La posture de récupération par excellence : à utiliser entre deux séries difficiles.","muscles":["lower back"],"sprite":"Childs_Pose.webp","cotes":false},{"id":"Hug_Knees_To_Chest","nom":"Genoux serrés contre la poitrine","cat":"etirement","zones":["lombaires","fessiers"],"niv":"debutant","type":"temps","defaut":30,"tags":["recuperation"],"etapes":["Allongé sur le dos, ramenez les deux genoux vers la poitrine.","Enlacez-les avec les bras et serrez doucement.","Respirez amplement en laissant le bas du dos s'arrondir contre le sol."],"conseil":"Vous pouvez basculer légèrement de gauche à droite pour masser le bas du dos.","muscles":["lower back"],"sprite":"Hug_Knees_To_Chest.webp","cotes":false},{"id":"One_Knee_To_Chest","nom":"Un genou contre la poitrine","cat":"etirement","zones":["fessiers","lombaires"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Sur le dos, une jambe tendue au sol, l'autre genou ramené vers la poitrine.","Tirez doucement sur le genou avec les mains.","Tenez, respirez, puis changez de jambe."],"conseil":"Gardez la jambe tendue bien à plat : c'est elle qui étire le devant de la hanche.","muscles":["glutes"],"sprite":"One_Knee_To_Chest.webp","cotes":true},{"id":"Knee_Across_The_Body","nom":"Genou croisé sur le corps","cat":"etirement","zones":["fessiers","hanches","lombaires"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Sur le dos, ramenez un genou vers la poitrine.","Guidez-le avec la main opposée vers l'autre côté du corps, en gardant les épaules au sol.","Tenez, puis changez de côté."],"conseil":"Très efficace sur les tensions de fessier et de bas du dos.","muscles":["glutes"],"sprite":"Knee_Across_The_Body.webp","cotes":true},{"id":"Ankle_On_The_Knee","nom":"Cheville sur le genou (figure 4)","cat":"etirement","zones":["fessiers","hanches"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Sur le dos, posez une cheville sur le genou opposé, jambe ouverte.","Attrapez la cuisse soutien et tirez-la vers vous.","Tenez en relâchant la hanche ouverte, puis changez de côté."],"conseil":"L'étirement du fessier le plus accessible : à faire tous les jours si vous êtes assis longtemps.","muscles":["glutes"],"sprite":"Ankle_On_The_Knee.webp","cotes":true},{"id":"Lying_Glute","nom":"Étirement du fessier allongé","cat":"etirement","zones":["fessiers","hanches"],"niv":"intermediaire","type":"temps","defaut":30,"tags":[],"etapes":["Sur le dos, croisez une cheville par-dessus le genou opposé.","Attrapez vos deux jambes et tirez-les vers la poitrine.","Tenez en respirant, puis changez de côté."],"conseil":"Si vous ne pouvez pas attraper les jambes, poussez simplement le genou vers l'extérieur.","muscles":["glutes"],"sprite":"Lying_Glute.webp","cotes":true},{"id":"Seated_Glute","nom":"Étirement du fessier assis","cat":"etirement","zones":["fessiers","hanches"],"niv":"intermediaire","type":"temps","defaut":30,"tags":[],"etapes":["Assis, une jambe tendue devant vous, l'autre pied croisé par-dessus la cuisse.","Enlacez le genou fléchi et tirez-le vers l'épaule opposée en tournant le buste.","Tenez, puis changez de côté."],"conseil":"Gardez le dos droit : si vous vous affaissez, l'étirement se perd.","muscles":["glutes"],"sprite":"Seated_Glute.webp","cotes":true},{"id":"Dancers_Stretch","nom":"Étirement du danseur","cat":"etirement","zones":["fessiers","lombaires","hanches"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Assis, une jambe fléchie devant vous, l'autre repliée derrière.","Penchez le buste vers l'avant au-dessus de la jambe avant.","Tenez en respirant, puis changez de côté."],"conseil":"Avancez le buste seulement jusqu'à sentir une tension confortable.","muscles":["lower back"],"sprite":"Dancers_Stretch.webp","cotes":true},{"id":"90_90_Hamstring","nom":"Ischio-jambiers 90/90","cat":"etirement","zones":["ischios","mollets"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["Sur le dos, une jambe tendue au sol, l'autre hanche et genou fléchis à 90°.","Soutenez la cuisse avec les mains si besoin.","Tendez la jambe vers le plafond, marquez une pause en haut, puis revenez. Changez de jambe."],"conseil":"Version active de l'étirement : plus sûre et plus efficace à froid qu'un étirement tenu.","muscles":["hamstrings"],"sprite":"90_90_Hamstring.webp","cotes":true},{"id":"Seated_Floor_Hamstring_Stretch","nom":"Ischio-jambiers assis au sol","cat":"etirement","zones":["ischios","lombaires"],"niv":"debutant","type":"temps","defaut":35,"tags":[],"etapes":["Assis au sol, jambes tendues devant vous.","Penchez le buste vers l'avant en gardant le dos le plus long possible.","Descendez jusqu'à une tension confortable et respirez."],"conseil":"Pliez légèrement les genoux si le bas du dos s'arrondit fortement.","muscles":["hamstrings"],"sprite":"Seated_Floor_Hamstring_Stretch.webp","cotes":false},{"id":"Seated_Hamstring","nom":"Ischio-jambiers assis une jambe","cat":"etirement","zones":["ischios"],"niv":"intermediaire","type":"temps","defaut":30,"tags":[],"etapes":["Assis, une jambe tendue devant vous, l'autre repliée vers l'intérieur.","Penchez le buste vers le pied de la jambe tendue.","Tenez, puis changez de jambe."],"conseil":"Orientez la poitrine vers le genou plutôt que de chercher à attraper le pied.","muscles":["hamstrings"],"sprite":"Seated_Hamstring.webp","cotes":true},{"id":"Leg-Up_Hamstring_Stretch","nom":"Ischio-jambiers jambe levée","cat":"etirement","zones":["ischios","mollets"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Sur le dos, une jambe tendue au sol.","Levez l'autre jambe tendue vers le plafond et attrapez l'arrière de la cuisse avec les mains.","Tirez doucement vers vous, tenez, puis changez de jambe."],"conseil":"La variante la plus sûre pour le bas du dos, car il reste plaqué au sol.","muscles":["hamstrings"],"sprite":"Leg-Up_Hamstring_Stretch.webp","cotes":true},{"id":"Standing_Toe_Touches","nom":"Flexion avant debout","cat":"etirement","zones":["ischios","lombaires"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Debout, pieds à largeur de bassin.","Penchez-vous vers l'avant en relâchant la nuque et les bras vers le sol.","Laissez le poids du buste faire le travail et respirez."],"conseil":"Genoux légèrement fléchis : l'objectif est de relâcher le dos, pas de toucher le sol.","muscles":["hamstrings"],"sprite":"Standing_Toe_Touches.webp","cotes":false},{"id":"Upper_Back-Leg_Grab","nom":"Buste vers les jambes assis","cat":"etirement","zones":["ischios","dos"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Assis, jambes tendues et serrées.","Attrapez vos mollets, chevilles ou pieds selon votre souplesse.","Tirez doucement le buste vers les jambes en gardant la nuque relâchée."],"conseil":"Progressez en remontant les mains vers les pieds au fil des semaines.","muscles":["hamstrings"],"sprite":"Upper_Back-Leg_Grab.webp","cotes":false},{"id":"Runners_Stretch","nom":"Étirement du coureur","cat":"etirement","zones":["ischios","hanches","mollets"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["En fente avant, les deux mains au sol de part et d'autre du pied avant.","Poussez le bassin vers l'arrière en tendant la jambe avant pour étirer l'arrière de la cuisse.","Tenez, puis changez de côté."],"conseil":"Alternez tension de la jambe avant et retour en fente pour un étirement dynamique.","muscles":["hamstrings"],"sprite":"Runners_Stretch.webp","cotes":true},{"id":"The_Straddle","nom":"Grand écart facial assis","cat":"etirement","zones":["adducteurs","ischios"],"niv":"intermediaire","type":"temps","defaut":40,"tags":[],"etapes":["Assis au sol, écartez les jambes tendues le plus largement possible.","Gardez le dos droit et penchez le buste vers l'avant depuis les hanches.","Descendez progressivement et respirez amplement."],"conseil":"Progressez sur plusieurs semaines : ne forcez jamais sur cette position.","muscles":["hamstrings"],"sprite":"The_Straddle.webp","cotes":false},{"id":"Adductor_Groin","nom":"Étirement des adducteurs","cat":"etirement","zones":["adducteurs","hanches"],"niv":"intermediaire","type":"temps","defaut":35,"tags":[],"etapes":["Assis, plantes de pieds jointes, genoux ouverts sur les côtés (papillon).","Posez les coudes sur l'intérieur des cuisses et appuyez doucement vers le sol.","Gardez le dos droit et respirez."],"conseil":"Rapprochez les talons du bassin pour accentuer, éloignez-les pour adoucir.","muscles":["adductors"],"sprite":"Adductor_Groin.webp","cotes":false},{"id":"Side_Lying_Groin_Stretch","nom":"Adducteurs allongé sur le côté","cat":"etirement","zones":["adducteurs","hanches"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Allongé sur le côté, en appui sur l'avant-bras.","Levez la jambe du dessus vers le plafond, aussi haut que possible.","Tenez, redescendez lentement, puis changez de côté."],"conseil":"Gardez le bassin perpendiculaire au sol, sans basculer vers l'arrière.","muscles":["adductors"],"sprite":"Side_Lying_Groin_Stretch.webp","cotes":true},{"id":"Groin_and_Back_Stretch","nom":"Étirement aine et dos","cat":"etirement","zones":["adducteurs","lombaires"],"niv":"intermediaire","type":"temps","defaut":35,"tags":[],"etapes":["Assis, jambes écartées et fléchies, pieds au sol.","Penchez le buste vers l'avant entre les jambes, mains au sol.","Laissez le dos s'arrondir et les hanches s'ouvrir, puis respirez."],"conseil":"Combine l'ouverture des hanches et le relâchement du bas du dos.","muscles":["adductors"],"sprite":"Groin_and_Back_Stretch.webp","cotes":false},{"id":"Kneeling_Hip_Flexor","nom":"Fléchisseurs de hanche à genoux","cat":"etirement","zones":["hanches","cuisses"],"niv":"debutant","type":"temps","defaut":35,"tags":["posture"],"etapes":["En fente, le genou arrière posé au sol, le pied avant à plat.","Poussez le bassin vers l'avant en rentrant légèrement les fessiers pour effacer la cambrure.","Tenez sans creuser le bas du dos, puis changez de côté."],"conseil":"L'étirement le plus important si vous êtes assis plusieurs heures par jour.","muscles":["quadriceps"],"sprite":"Kneeling_Hip_Flexor.webp","cotes":true},{"id":"Standing_Hip_Flexors","nom":"Fléchisseurs de hanche debout","cat":"etirement","zones":["hanches","cuisses"],"niv":"debutant","type":"temps","defaut":30,"tags":["posture"],"etapes":["Debout en fente, jambe arrière tendue, mains sur les hanches.","Avancez le bassin en rentrant les fessiers pour étirer le devant de la hanche arrière.","Tenez, puis changez de côté."],"conseil":"Version debout, pratique au bureau sans avoir à s'agenouiller.","muscles":["quadriceps"],"sprite":"Standing_Hip_Flexors.webp","cotes":true},{"id":"All_Fours_Quad_Stretch","nom":"Quadriceps à quatre pattes","cat":"etirement","zones":["cuisses","hanches"],"niv":"intermediaire","type":"temps","defaut":30,"tags":[],"etapes":["À genoux, attrapez une cheville avec la main du même côté.","Tirez le talon vers la fesse en gardant le bassin aligné et le dos neutre.","Tenez, puis changez de côté."],"conseil":"Si vous ne pouvez pas attraper la cheville, passez par la version allongée sur le côté.","muscles":["quadriceps"],"sprite":"All_Fours_Quad_Stretch.webp","cotes":true},{"id":"On_Your_Side_Quad_Stretch","nom":"Quadriceps allongé sur le côté","cat":"etirement","zones":["cuisses","hanches"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Allongé sur le côté, tête soutenue par le bras du dessous.","Attrapez la cheville du dessus et tirez le talon vers la fesse.","Tenez, puis changez de côté."],"conseil":"La version la plus accessible : aucun équilibre nécessaire.","muscles":["quadriceps"],"sprite":"On_Your_Side_Quad_Stretch.webp","cotes":true},{"id":"Lying_Prone_Quadriceps","nom":"Quadriceps à plat ventre","cat":"etirement","zones":["cuisses"],"niv":"intermediaire","type":"temps","defaut":30,"tags":[],"etapes":["À plat ventre, attrapez une cheville avec la main du même côté.","Tirez le talon vers la fesse en gardant les hanches au sol.","Tenez, puis changez de côté."],"conseil":"Ne décollez pas le bassin : si c'est le cas, réduisez la traction.","muscles":["quadriceps"],"sprite":"Lying_Prone_Quadriceps.webp","cotes":true},{"id":"One_Half_Locust","nom":"Demi-sauterelle","cat":"etirement","zones":["cuisses","lombaires"],"niv":"intermediaire","type":"temps","defaut":30,"tags":[],"etapes":["À plat ventre, en appui sur les avant-bras.","Fléchissez un genou et attrapez la cheville avec la main opposée si possible.","Ouvrez la poitrine et tenez, puis changez de côté."],"conseil":"Étire les cuisses tout en ouvrant le devant du corps.","muscles":["quadriceps"],"sprite":"One_Half_Locust.webp","cotes":true},{"id":"Calf_Stretch_Hands_Against_Wall","nom":"Mollets mains au mur","cat":"etirement","zones":["mollets","chevilles"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Face à un mur, mains en appui à hauteur d'épaules.","Reculez une jambe tendue, talon bien ancré au sol.","Avancez le bassin pour étirer le mollet, tenez, puis changez de jambe."],"conseil":"Le talon arrière doit rester collé au sol, sinon l'étirement est perdu.","muscles":["calves"],"sprite":"Calf_Stretch_Hands_Against_Wall.webp","cotes":true},{"id":"Calf_Stretch_Elbows_Against_Wall","nom":"Mollets coudes au mur","cat":"etirement","zones":["mollets","chevilles"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Face à un mur, avant-bras en appui, front près du mur.","Reculez une jambe tendue, talon au sol.","Poussez le bassin vers le mur pour accentuer, puis changez de jambe."],"conseil":"Position plus confortable que les mains au mur pour un étirement long.","muscles":["calves"],"sprite":"Calf_Stretch_Elbows_Against_Wall.webp","cotes":true},{"id":"Standing_Soleus_And_Achilles_Stretch","nom":"Soléaire et tendon d'Achille","cat":"etirement","zones":["mollets","chevilles"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Face à un mur, mains en appui, une jambe reculée.","Pliez le genou de la jambe arrière en gardant le talon au sol.","Tenez pour étirer le bas du mollet et le tendon, puis changez de jambe."],"conseil":"Genou fléchi, l'étirement descend sur le soléaire : complémentaire de l'étirement jambe tendue.","muscles":["calves"],"sprite":"Standing_Soleus_And_Achilles_Stretch.webp","cotes":true},{"id":"Chin_To_Chest_Stretch","nom":"Menton vers la poitrine","cat":"etirement","zones":["cou","dos"],"niv":"debutant","type":"temps","defaut":25,"tags":["posture"],"etapes":["Assis ou debout, épaules relâchées.","Posez les mains derrière la tête et laissez le poids des bras amener le menton vers la poitrine.","Respirez sans tirer brusquement, puis relevez lentement la tête."],"conseil":"Laissez simplement le poids des bras agir : ne tirez jamais sur la nuque.","muscles":["neck"],"sprite":"Chin_To_Chest_Stretch.webp","cotes":false},{"id":"Side_Neck_Stretch","nom":"Étirement latéral du cou","cat":"etirement","zones":["cou","epaules"],"niv":"debutant","type":"temps","defaut":25,"tags":["posture"],"etapes":["Assis ou debout, épaule opposée bien basse.","Inclinez la tête sur le côté, oreille vers l'épaule, en vous aidant doucement de la main.","Tenez, puis changez de côté."],"conseil":"Gardez l'épaule du côté étiré bien relâchée vers le bas.","muscles":["neck"],"sprite":"Side_Neck_Stretch.webp","cotes":true},{"id":"Shoulder_Stretch","nom":"Étirement d'épaule","cat":"etirement","zones":["epaules","dos"],"niv":"debutant","type":"temps","defaut":25,"tags":[],"etapes":["Debout, tendez un bras à l'horizontale devant vous.","Avec l'autre bras, ramenez-le en travers de la poitrine.","Tenez, puis changez de bras."],"conseil":"Gardez l'épaule étirée basse, sans la laisser monter vers l'oreille.","muscles":["shoulders"],"sprite":"Shoulder_Stretch.webp","cotes":true},{"id":"Seated_Front_Deltoid","nom":"Deltoïde antérieur assis","cat":"etirement","zones":["epaules","poitrine"],"niv":"intermediaire","type":"temps","defaut":25,"tags":["posture"],"etapes":["Assis au sol, posez les mains derrière vous, doigts vers l'arrière.","Avancez le bassin pour ouvrir le devant des épaules et de la poitrine.","Tenez en gardant la poitrine haute."],"conseil":"Excellent contre la fermeture des épaules liée au travail assis.","muscles":["shoulders"],"sprite":"Seated_Front_Deltoid.webp","cotes":false},{"id":"Upward_Stretch","nom":"Étirement vers le haut","cat":"etirement","zones":["epaules","abdos","dos"],"niv":"debutant","type":"temps","defaut":25,"tags":[],"etapes":["Debout, mains croisées, bras tendus au-dessus de la tête, paumes vers le plafond.","Poussez les mains vers le haut en vous grandissant au maximum.","Respirez amplement et tenez."],"conseil":"L'étirement le plus simple pour se décompresser après une position assise.","muscles":["shoulders"],"sprite":"Upward_Stretch.webp","cotes":false},{"id":"Overhead_Stretch","nom":"Étirement latéral bras au-dessus","cat":"etirement","zones":["abdos","dos","epaules"],"niv":"debutant","type":"temps","defaut":25,"tags":[],"etapes":["Debout, un bras tendu au-dessus de la tête.","Inclinez le buste du côté opposé en gardant les hanches fixes.","Tenez, puis changez de côté."],"conseil":"N'avancez pas le buste : l'inclinaison reste strictement sur le côté.","muscles":["abdominals"],"sprite":"Overhead_Stretch.webp","cotes":true},{"id":"Seated_Overhead_Stretch","nom":"Étirement latéral assis","cat":"etirement","zones":["abdos","dos"],"niv":"debutant","type":"temps","defaut":25,"tags":[],"etapes":["Assis, jambes croisées, une main en appui au sol.","Tendez l'autre bras au-dessus de la tête et inclinez le buste sur le côté.","Tenez, puis changez de côté."],"conseil":"Gardez les deux fessiers en contact avec le sol.","muscles":["abdominals"],"sprite":"Seated_Overhead_Stretch.webp","cotes":true},{"id":"Standing_Lateral_Stretch","nom":"Inclinaison latérale debout","cat":"etirement","zones":["abdos","dos"],"niv":"debutant","type":"temps","defaut":25,"tags":[],"etapes":["Debout, pieds à largeur de bassin, mains sur les hanches.","Inclinez le buste sur le côté, lentement et sans à-coup.","Revenez au centre, puis changez de côté."],"conseil":"Mouvement de mobilisation : plus efficace répété lentement que tenu longtemps.","muscles":["abdominals"],"sprite":"Standing_Lateral_Stretch.webp","cotes":true},{"id":"Side-Lying_Floor_Stretch","nom":"Étirement du dos allongé sur le côté","cat":"etirement","zones":["dos","epaules"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["Allongé sur le côté, genoux fléchis, bras du dessus tendu devant vous.","Faites glisser ce bras en grand arc de cercle vers l'arrière, en laissant le buste s'ouvrir.","Tenez à l'ouverture maximale, puis changez de côté."],"conseil":"Gardez les genoux au sol pour que la rotation vienne du buste, pas du bassin.","muscles":["lats"],"sprite":"Side-Lying_Floor_Stretch.webp","cotes":true},{"id":"Middle_Back_Stretch","nom":"Étirement du milieu du dos","cat":"etirement","zones":["dos","epaules"],"niv":"debutant","type":"temps","defaut":25,"tags":["posture"],"etapes":["Debout, bras tendus devant vous, mains croisées.","Arrondissez le haut du dos en poussant les mains loin devant.","Rentrez le menton et écartez les omoplates, puis respirez."],"conseil":"Cherchez à écarter les omoplates le plus possible l'une de l'autre.","muscles":["middle back"],"sprite":"Middle_Back_Stretch.webp","cotes":false},{"id":"Upper_Back_Stretch","nom":"Étirement du haut du dos","cat":"etirement","zones":["dos","epaules"],"niv":"debutant","type":"temps","defaut":25,"tags":["posture"],"etapes":["Debout, attrapez vos coudes ou croisez les bras devant vous.","Arrondissez le haut du dos en poussant les épaules vers l'avant.","Tenez en respirant profondément."],"conseil":"À faire plusieurs fois par jour en période de travail intensif sur écran.","muscles":["middle back"],"sprite":"Upper_Back_Stretch.webp","cotes":false},{"id":"One_Arm_Against_Wall","nom":"Un bras contre le mur","cat":"etirement","zones":["dos","epaules","poitrine"],"niv":"debutant","type":"temps","defaut":25,"tags":[],"etapes":["Debout de côté par rapport à un mur, posez une main à plat dessus, bras tendu.","Tournez lentement le buste dans la direction opposée.","Tenez, puis changez de côté."],"conseil":"Variez la hauteur de la main pour cibler différentes parties de l'épaule.","muscles":["lats"],"sprite":"One_Arm_Against_Wall.webp","cotes":true},{"id":"Chair_Lower_Back_Stretch","nom":"Étirement du dos assis","cat":"etirement","zones":["lombaires","dos"],"niv":"debutant","type":"temps","defaut":30,"tags":["posture"],"etapes":["Assis sur une chaise, pieds à plat et jambes écartées.","Penchez le buste vers l'avant entre les jambes, bras relâchés vers le sol.","Laissez le dos s'arrondir et respirez."],"conseil":"Le seul étirement de cette sélection qui se fait entièrement assis : idéal au bureau.","muscles":["lats"],"sprite":"Chair_Lower_Back_Stretch.webp","cotes":false},{"id":"Triceps_Stretch","nom":"Étirement des triceps","cat":"etirement","zones":["bras","epaules"],"niv":"debutant","type":"temps","defaut":25,"tags":[],"etapes":["Debout, levez un bras et pliez le coude pour amener la main derrière la tête.","Avec l'autre main, poussez doucement le coude vers l'arrière et le bas.","Tenez, puis changez de bras."],"conseil":"Gardez la tête droite, sans la pencher vers l'avant.","muscles":["triceps"],"sprite":"Triceps_Stretch.webp","cotes":true},{"id":"Tricep_Side_Stretch","nom":"Triceps en traction latérale","cat":"etirement","zones":["bras","epaules"],"niv":"debutant","type":"temps","defaut":25,"tags":[],"etapes":["Debout, amenez un bras plié en travers de la poitrine, coude vers le haut.","Attrapez le coude avec la main opposée et tirez-le vers vous.","Tenez, puis changez de bras."],"conseil":"Variante utile si lever le bras au-dessus de la tête est inconfortable.","muscles":["triceps"],"sprite":"Tricep_Side_Stretch.webp","cotes":true},{"id":"Overhead_Triceps","nom":"Triceps bras au-dessus de la tête","cat":"etirement","zones":["bras","epaules"],"niv":"intermediaire","type":"temps","defaut":25,"tags":[],"etapes":["Debout, les deux mains se rejoignant derrière le dos, l'une par-dessus l'épaule, l'autre par le bas.","Rapprochez les doigts autant que possible, sans forcer.","Tenez, puis inversez les bras."],"conseil":"Si les mains ne se touchent pas, c'est normal : progressez semaine après semaine.","muscles":["triceps"],"sprite":"Overhead_Triceps.webp","cotes":false},{"id":"Seated_Biceps","nom":"Biceps assis","cat":"etirement","zones":["bras","epaules","poitrine"],"niv":"intermediaire","type":"temps","defaut":25,"tags":[],"etapes":["Assis au sol, mains posées derrière vous, doigts tournés vers l'arrière, bras tendus.","Avancez doucement le bassin pour augmenter la tension sur le devant des bras.","Tenez et respirez."],"conseil":"Avancez très progressivement : l'avant du bras est une zone sensible.","muscles":["biceps"],"sprite":"Seated_Biceps.webp","cotes":false},{"id":"Side_Wrist_Pull","nom":"Traction latérale du poignet","cat":"etirement","zones":["poignets","epaules"],"niv":"debutant","type":"temps","defaut":25,"tags":[],"etapes":["Debout, attrapez un poignet avec la main opposée derrière le dos.","Tirez doucement le bras vers le côté et le bas en inclinant la tête du côté opposé.","Tenez, puis changez de côté."],"conseil":"Étire à la fois le poignet, l'épaule et le côté du cou.","muscles":["shoulders"],"sprite":"Side_Wrist_Pull.webp","cotes":true},{"id":"Looking_At_Ceiling","nom":"Regard vers le plafond","cat":"etirement","zones":["cuisses","abdos","cou"],"niv":"debutant","type":"temps","defaut":25,"tags":[],"etapes":["À genoux, assis sur les talons, mains posées derrière vous.","Ouvrez la poitrine et regardez doucement vers le plafond.","Tenez en respirant, sans forcer sur la nuque."],"conseil":"Arrêtez-vous dès que la nuque devient inconfortable.","muscles":["quadriceps"],"sprite":"Looking_At_Ceiling.webp","cotes":false},{"id":"Mountain_Climbers","nom":"Mountain climbers","cat":"explosif","zones":["abdos","hanches","epaules"],"niv":"debutant","type":"temps","defaut":30,"tags":[],"etapes":["En position de pompe haute, corps gainé, un genou ramené sous la hanche.","Alternez rapidement la position des jambes, comme si vous couriez sur place à l'horizontale.","Gardez le bassin bas et stable pendant tout l'effort."],"conseil":"Si le bassin monte et descend, ralentissez : la stabilité passe avant la vitesse.","muscles":["quadriceps"],"sprite":"Mountain_Climbers.webp","cotes":false},{"id":"Star_Jump","nom":"Saut étoile","cat":"explosif","zones":["cuisses","fessiers","epaules"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["Debout, pieds à largeur de bassin, bras près du corps.","Descendez en demi-squat, puis sautez en écartant bras et jambes en étoile.","Amortissez la réception en ramenant les membres et en pliant les genoux."],"conseil":"Réception souple, sur l'avant du pied puis le talon.","muscles":["quadriceps"],"sprite":"Star_Jump.webp","cotes":false},{"id":"Rocket_Jump","nom":"Saut fusée","cat":"explosif","zones":["cuisses","fessiers","mollets"],"niv":"debutant","type":"reps","defaut":10,"tags":[],"etapes":["Debout, pieds à largeur d'épaules, bras le long du corps.","Descendez en demi-squat puis explosez vers le haut en tendant tout le corps, bras au-dessus de la tête.","Amortissez la réception avec les jambes."],"conseil":"Cherchez la hauteur, pas le nombre : qualité avant quantité.","muscles":["quadriceps"],"sprite":"Rocket_Jump.webp","cotes":false},{"id":"Split_Jump","nom":"Fente sautée","cat":"explosif","zones":["cuisses","fessiers"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["Partez en position de fente, genou arrière proche du sol.","Sautez en tendant les deux jambes, en rapprochant les pieds en l'air.","Reposez-vous en fente et enchaînez."],"conseil":"Le genou avant reste dans l'axe du pied à la réception.","muscles":["quadriceps"],"sprite":"Split_Jump.webp","cotes":false},{"id":"Knee_Tuck_Jump","nom":"Saut genoux groupés","cat":"explosif","zones":["cuisses","abdos"],"niv":"intermediaire","type":"reps","defaut":10,"tags":[],"etapes":["Debout, mains à hauteur de poitrine, paumes vers le bas.","Descendez en quart de squat et explosez vers le haut en ramenant les genoux vers les paumes.","Retendez les jambes pour amortir la réception."],"conseil":"À éviter en cas de gêne aux genoux ou aux chevilles.","muscles":["hamstrings"],"sprite":"Knee_Tuck_Jump.webp","cotes":false},{"id":"Double_Leg_Butt_Kick","nom":"Saut talons-fesses","cat":"explosif","zones":["ischios","cuisses"],"niv":"debutant","type":"reps","defaut":12,"tags":[],"etapes":["Debout, genoux légèrement fléchis.","Descendez brièvement puis sautez à la verticale.","En l'air, pliez les genoux pour amener les talons vers les fesses, puis amortissez la réception."],"conseil":"Réception genoux souples, jamais jambes tendues.","muscles":["quadriceps"],"sprite":"Double_Leg_Butt_Kick.webp","cotes":false},{"id":"Lateral_Bound","nom":"Bond latéral","cat":"explosif","zones":["cuisses","fessiers","adducteurs"],"niv":"intermediaire","type":"reps","defaut":12,"tags":[],"etapes":["En demi-squat, poids sur une jambe.","Poussez fort pour bondir sur le côté et atterrir sur l'autre jambe.","Amortissez puis repartez immédiatement dans l'autre sens."],"conseil":"Cherchez la distance latérale et la stabilité à la réception.","muscles":["adductors"],"sprite":"Lateral_Bound.webp","cotes":false},{"id":"Plyo_Push-up","nom":"Pompe sautée","cat":"explosif","zones":["poitrine","bras","epaules"],"niv":"avance","type":"reps","defaut":6,"tags":[],"etapes":["Position de pompe, corps gainé.","Descendez la poitrine vers le sol, puis poussez aussi fort que possible pour décoller les mains.","Amortissez la réception en pliant immédiatement les coudes."],"conseil":"À n'aborder qu'avec 20 pompes classiques propres en réserve.","muscles":["chest"],"sprite":"Plyo_Push-up.webp","cotes":false}];
+const PAR_ID = Object.fromEntries(EXOS.map(e => [e.id, e]));
+
+const LIB_CAT = {gainage:"Gainage", callisthenie:"Callisthénie", etirement:"Étirements",
+                 mobilite:"Mobilité", articulaire:"Articulations", explosif:"Explosif"};
+const LIB_ZONE = {abdos:"Abdos", lombaires:"Lombaires", dos:"Dos", epaules:"Épaules", cou:"Cou",
+  bras:"Bras", poitrine:"Poitrine", hanches:"Hanches", fessiers:"Fessiers", cuisses:"Cuisses",
+  ischios:"Ischios", mollets:"Mollets", chevilles:"Chevilles", poignets:"Poignets",
+  adducteurs:"Adducteurs", genoux:"Genoux"};
+const LIB_NIV = {debutant:"Débutant", intermediaire:"Intermédiaire", avance:"Avancé"};
+
+/* ---------------- stockage local tolérant aux pannes ---------------- */
+const DB = {
+  cle:"corpslibre.v1",
+  d:{seances:[], prog:{}, voix:true},
+  charger(){ try{ const b=localStorage.getItem(this.cle); if(b) Object.assign(this.d, JSON.parse(b)); }catch(e){} },
+  sauver(){ try{ localStorage.setItem(this.cle, JSON.stringify(this.d)); }catch(e){} }
+};
+DB.charger();
+
+/* ---------------- programmes ---------------- */
+const P = (ids) => ids;
+const PROGS = [
+{id:"dos", nom:"Réveil du dos", emoji:"🌅", semaines:4, parSem:3, tours:w=>1, repos:10,
+ nb:7, duree:"8 min", desc:"Mobilisation douce de la colonne et du bassin. Conçu pour être fait le matin ou après une journée assise.",
+ pool:P(["Cat_Stretch","Standing_Pelvic_Tilt","Pelvic_Tilt_Into_Bridge","Hug_Knees_To_Chest","Lying_Crossover",
+ "Childs_Pose","Dynamic_Back_Stretch","Spinal_Stretch","Middle_Back_Stretch","Butt_Lift_Bridge",
+ "Superman","Lower_Back_Curl","Knee_Across_The_Body","Chair_Lower_Back_Stretch","Upper_Back_Stretch"])},
+
+{id:"gainage", nom:"Gainage progressif", emoji:"🔥", semaines:6, parSem:3, tours:w=>w<=2?2:(w<=4?3:4), repos:25,
+ nb:5, duree:"10 → 20 min", desc:"Construit la sangle abdominale et lombaire de zéro. Le volume augmente toutes les deux semaines.",
+ pool:P(["Plank","Dead_Bug","Side_Bridge","Bent-Knee_Hip_Raise","Butt-Ups","Reverse_Crunch",
+ "Scissor_Kick","Superman","Cocoons","Russian_Twist","Spider_Crawl","Cross-Body_Crunch",
+ "Leg_Pull-In","Tuck_Crunch","Stomach_Vacuum","Side_Jackknife","Air_Bike","Toe_Touchers"])},
+
+{id:"souplesse", nom:"Souplesse générale", emoji:"🧘", semaines:8, parSem:3, tours:w=>1, repos:5,
+ nb:9, duree:"15 → 20 min", desc:"Gain d'amplitude sur tout le corps. Les temps de maintien s'allongent semaine après semaine.",
+ pool:P(["Seated_Floor_Hamstring_Stretch","Adductor_Groin","Kneeling_Hip_Flexor","All_Fours_Quad_Stretch",
+ "Calf_Stretch_Hands_Against_Wall","Childs_Pose","Ankle_On_The_Knee","Chin_To_Chest_Stretch",
+ "Shoulder_Stretch","The_Straddle","Lying_Glute","Standing_Hip_Flexors","On_Your_Side_Quad_Stretch",
+ "Standing_Soleus_And_Achilles_Stretch","Seated_Front_Deltoid","Triceps_Stretch","Side_Neck_Stretch",
+ "Upper_Back-Leg_Grab","Side_Lying_Groin_Stretch","Dancers_Stretch","Seated_Hamstring","Runners_Stretch",
+ "Groin_and_Back_Stretch","Overhead_Stretch","One_Arm_Against_Wall","Side-Lying_Floor_Stretch"])},
+
+{id:"force", nom:"Callisthénie débutant", emoji:"💪", semaines:6, parSem:3, tours:w=>w<=2?2:(w<=4?3:4), repos:35,
+ nb:5, duree:"12 → 22 min", desc:"Les mouvements de base au poids du corps : pompes, squats, dips, ponts. Progression en nombre de tours.",
+ pool:P(["Pushups","Bodyweight_Squat","Dips_-_Triceps_Version","Butt_Lift_Bridge","Plank",
+ "Split_Squats","Body-Up","Glute_Kickback","Single_Leg_Glute_Bridge","Sit_Squats",
+ "Isometric_Wipers","Prone_Manual_Hamstring","Side_Bridge","Push_Up_to_Side_Plank","Dead_Bug"])},
+
+{id:"articulations", nom:"Mobilité articulaire", emoji:"⚙️", semaines:4, parSem:4, tours:w=>1, repos:8,
+ nb:8, duree:"6 min", desc:"Routine courte qui passe en revue cou, épaules, coudes, poignets, hanches, genoux et chevilles.",
+ pool:P(["Shoulder_Circles","Arm_Circles","Elbow_Circles","Wrist_Circles","Knee_Circles",
+ "Standing_Hip_Circles","Hip_Circles_prone","Isometric_Neck_Exercise_-_Front_And_Back",
+ "Isometric_Neck_Exercise_-_Sides","Shoulder_Raise","Elbows_Back","Kneeling_Forearm_Stretch",
+ "Cat_Stretch","Standing_Lateral_Stretch"])},
+
+{id:"posture", nom:"Posture anti-bureau", emoji:"🪑", semaines:4, parSem:5, tours:w=>1, repos:8,
+ nb:8, duree:"7 min", desc:"Cible précisément ce que la position assise dégrade : hanches fermées, épaules enroulées, nuque en avant.",
+ pool:P(["Kneeling_Hip_Flexor","Elbows_Back","Dynamic_Chest_Stretch","Chin_To_Chest_Stretch",
+ "Middle_Back_Stretch","Standing_Pelvic_Tilt","Cat_Stretch","Butt_Lift_Bridge","Superman",
+ "Seated_Front_Deltoid","Side_Neck_Stretch","Chair_Lower_Back_Stretch","Upper_Back_Stretch",
+ "Stomach_Vacuum","Shoulder_Raise","Standing_Hip_Flexors","Dead_Bug"])}
+];
+const PROG_PAR_ID = Object.fromEntries(PROGS.map(p => [p.id, p]));
+
+/* progression : la cible augmente d'environ 10 % par semaine */
+function cible(exo, semaine){
+  const f = 1 + 0.10 * (semaine - 1);
+  if (exo.type === "temps") return Math.max(10, Math.round(exo.defaut * f / 5) * 5);
+  return Math.max(4, Math.round(exo.defaut * f));
+}
+
+/* construit la liste d'exercices d'une séance de programme */
+function construireSeance(prog, semaine, idx){
+  const dep = ((semaine - 1) * prog.parSem + idx) * 3;
+  const liste = [];
+  for (let i = 0; i < prog.nb; i++) liste.push(prog.pool[(dep + i) % prog.pool.length]);
+  const tours = prog.tours(semaine);
+  const plan = [];
+  for (let t = 0; t < tours; t++){
+    liste.forEach((id, i) => {
+      const e = PAR_ID[id];
+      plan.push({id, cible:cible(e, semaine), repos:(t===tours-1 && i===liste.length-1) ? 0 : prog.repos});
+    });
+  }
+  return {plan, tours, nb:liste.length, titre:`Semaine ${semaine} · séance ${idx+1}`};
+}
+
+/* séance express générée à la demande */
+function seanceExpress(focus, minutes){
+  const bassin = focus === "mixte" ? EXOS : EXOS.filter(e => e.cat === focus);
+  const ech = EXOS.filter(e => (e.tags||[]).includes("echauffement") || e.cat === "articulaire");
+  const melange = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+  const secondes = minutes * 60;
+  const plan = [];
+  let total = 0;
+  const repos = focus === "etirement" ? 5 : 20;
+  const pousser = (e, c) => { plan.push({id:e.id, cible:c, repos}); total += (e.type==="temps"? c : c*3) + repos; };
+  if (minutes >= 10) melange(ech).slice(0,2).forEach(e => pousser(e, e.defaut));
+  const choix = melange(bassin);
+  let i = 0;
+  while (total < secondes && plan.length < 40){
+    const e = choix[i % choix.length]; i++;
+    if (i > choix.length * 3) break;
+    pousser(e, e.defaut);
+  }
+  if (plan.length) plan[plan.length-1].repos = 0;
+  const nomFocus = focus === "mixte" ? "Séance complète" : LIB_CAT[focus];
+  return {plan, tours:1, nb:plan.length, titre:`${nomFocus} · ${minutes} min`};
+}
+
+/* ---------------- rendu : helpers ---------------- */
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const visuel = (e, cls="") => `<div class="vis ${cls}" style="background-image:url('img/${e.sprite}')"></div>`;
+const pastilles = (e, nz = 1) => `<span class="pill cat-${e.cat}">${LIB_CAT[e.cat]}</span>`
+  + `<span class="pill n-${e.niv}">${LIB_NIV[e.niv]}</span>`
+  + e.zones.slice(0, nz).map(z => `<span class="pill">${LIB_ZONE[z]||z}</span>`).join("");
+const fmtCible = (e, c) => e.type === "temps"
+  ? `${c} s${e.cotes ? " / côté" : ""}`
+  : `${c} rép.${e.cotes ? " / côté" : ""}`;
+const mmss = s => `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,"0")}`;
+
+function dureeSeance(s){
+  return s.plan.reduce((t,p)=>{
+    const e = PAR_ID[p.id];
+    return t + (e.type==="temps" ? p.cible*(e.cotes?2:1) : p.cible*3*(e.cotes?2:1)) + p.repos;
+  },0);
+}
+
+/* ---------------- navigation ---------------- */
+$$(".nav button").forEach(b => b.onclick = () => {
+  $$(".nav button").forEach(x => x.classList.toggle("on", x === b));
+  $$(".vue").forEach(v => v.classList.toggle("on", v.id === "v-" + b.dataset.vue));
+  window.scrollTo(0,0);
+  if (b.dataset.vue === "suivi") rendreSuivi();
+  if (b.dataset.vue === "accueil") rendreAccueil();
+});
+function allerA(vue){ const b = $(`.nav button[data-vue="${vue}"]`); if (b) b.click(); }
+
+/* ---------------- accueil ---------------- */
+function rendreAccueil(){
+  const d = new Date();
+  $("#acc-date").textContent = d.toLocaleDateString("fr-FR",{weekday:"long", day:"numeric", month:"long"});
+
+  // reprise de programme
+  const en = PROGS.filter(p => DB.d.prog[p.id] && DB.d.prog[p.id].faites.length);
+  if (en.length){
+    const p = en.map(p=>({p, e:DB.d.prog[p.id]})).sort((a,b)=>b.e.maj - a.e.maj)[0];
+    const total = p.p.semaines * p.p.parSem;
+    const n = p.e.faites.length;
+    $("#acc-reprise").innerHTML = `
+      <div class="sect">Reprendre</div>
+      <button class="carte tap" style="width:100%;text-align:left;display:block" onclick="ouvrirProg('${p.p.id}')">
+        <div style="display:flex;align-items:center;gap:13px">
+          <div style="font-size:30px">${p.p.emoji}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:16px">${p.p.nom}</div>
+            <div style="font-size:13px;color:var(--txt2);margin-top:3px">${n} / ${total} séances terminées</div>
+            <div style="height:5px;background:var(--bg3);border-radius:3px;margin-top:8px;overflow:hidden">
+              <div style="height:100%;width:${Math.round(n/total*100)}%;background:var(--acc)"></div></div>
+          </div>
+          <div style="color:var(--txt3);font-size:19px">›</div>
+        </div></button>`;
+  } else $("#acc-reprise").innerHTML = "";
+
+  // liste des programmes (aperçu)
+  $("#acc-progs").innerHTML = PROGS.map(p => {
+    const e = DB.d.prog[p.id];
+    const n = e ? e.faites.length : 0;
+    const total = p.semaines * p.parSem;
+    return `<button class="carte tap" style="width:100%;text-align:left;display:block" onclick="ouvrirProg('${p.id}')">
+      <div style="display:flex;align-items:center;gap:13px">
+        <div style="font-size:26px">${p.emoji}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:15.5px">${p.nom}</div>
+          <div style="font-size:12.5px;color:var(--txt3);margin-top:2px">${p.semaines} semaines · ${p.duree}${n?` · ${n}/${total} faites`:""}</div>
+        </div><div style="color:var(--txt3);font-size:18px">›</div>
+      </div></button>`;
+  }).join("");
+}
+
+// chips de la séance express
+let focusExpress = "mixte", dureeExpress = 10;
+$$("[data-foc]").forEach(b => b.onclick = () => {
+  $$("[data-foc]").forEach(x => x.classList.toggle("on", x === b)); focusExpress = b.dataset.foc;
+});
+$$("[data-dur]").forEach(b => b.onclick = () => {
+  $$("[data-dur]").forEach(x => x.classList.toggle("on", x === b)); dureeExpress = +b.dataset.dur;
+});
+$("#go-express").onclick = () => demarrer(seanceExpress(focusExpress, dureeExpress), null);
+
+/* ---------------- programmes ---------------- */
+function rendreProgrammes(){
+  $("#prog-liste").innerHTML = PROGS.map(p => {
+    const e = DB.d.prog[p.id]; const n = e ? e.faites.length : 0;
+    const total = p.semaines * p.parSem;
+    return `<button class="carte tap" style="width:100%;text-align:left;display:block" onclick="ouvrirProg('${p.id}')">
+      <div style="display:flex;gap:13px;align-items:flex-start">
+        <div style="font-size:30px;line-height:1">${p.emoji}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:16.5px">${p.nom}</div>
+          <div style="font-size:13.5px;color:var(--txt2);margin-top:5px;line-height:1.45">${p.desc}</div>
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+            <span class="pill">${p.semaines} semaines</span>
+            <span class="pill">${p.parSem}× / semaine</span>
+            <span class="pill">${p.duree}</span>
+          </div>
+          ${n ? `<div style="height:5px;background:var(--bg3);border-radius:3px;margin-top:11px;overflow:hidden">
+            <div style="height:100%;width:${Math.round(n/total*100)}%;background:var(--acc)"></div></div>
+            <div style="font-size:12px;color:var(--acc);margin-top:6px;font-weight:600">${n} / ${total} séances terminées</div>` : ""}
+        </div></div></button>`;
+  }).join("");
+}
+
+let progOuvert = null, semOuverte = 1;
+window.ouvrirProg = function(id){
+  progOuvert = PROG_PAR_ID[id];
+  const e = DB.d.prog[id];
+  semOuverte = e ? Math.min(progOuvert.semaines, Math.floor(e.faites.length / progOuvert.parSem) + 1) : 1;
+  rendreProgDetail(); $("#pdet").classList.add("on"); $("#pdet").scrollTop = 0;
+};
+$("#pdet-x").onclick = () => { $("#pdet").classList.remove("on"); rendreProgrammes(); rendreAccueil(); };
+
+function rendreProgDetail(){
+  const p = progOuvert;
+  const etat = DB.d.prog[p.id] || {faites:[]};
+  const faites = new Set(etat.faites);
+  let h = `<div style="text-align:center;padding:4px 0 18px">
+    <div style="font-size:46px;line-height:1">${p.emoji}</div>
+    <h1 style="font-size:25px;margin-top:8px">${p.nom}</h1>
+    <p style="color:var(--txt2);font-size:14.5px;margin:9px 0 0">${p.desc}</p>
+  </div>
+  <div class="sem">`;
+  for (let w = 1; w <= p.semaines; w++){
+    const toutes = Array.from({length:p.parSem}, (_,i)=>`${w}-${i}`).every(k => faites.has(k));
+    h += `<button class="${w===semOuverte?"on":""} ${toutes?"ok":""}" onclick="semOuverte=${w};rendreProgDetail()">
+      Sem. ${w}${toutes?" ✓":""}</button>`;
+  }
+  h += `</div>`;
+  for (let i = 0; i < p.parSem; i++){
+    const s = construireSeance(p, semOuverte, i);
+    const cle = `${semOuverte}-${i}`;
+    const dur = Math.round(dureeSeance(s) / 60);
+    h += `<button class="seance ${faites.has(cle)?"ok":""}" onclick="demarrer(construireSeance(PROG_PAR_ID['${p.id}'],${semOuverte},${i}),{prog:'${p.id}',cle:'${cle}'})">
+      <div class="num">${faites.has(cle) ? "✓" : i+1}</div>
+      <div class="t"><div class="a">Séance ${i+1}</div>
+        <div class="b">${s.tours} tour${s.tours>1?"s":""} · ${s.nb} exercices · ~${dur} min</div></div>
+      <div class="fl">▶</div></button>`;
+  }
+  const s0 = construireSeance(p, semOuverte, 0);
+  const uniq = [...new Set(s0.plan.map(x=>x.id))];
+  h += `<div class="sect">Exercices de la semaine ${semOuverte}</div>`;
+  h += uniq.map(id => {
+    const e = PAR_ID[id];
+    return `<button class="ligne" onclick="ouvrirExo('${id}')">${visuel(e,"lent")}
+      <div class="inf"><div class="nm">${esc(e.nom)}</div><div class="mt">${pastilles(e)}</div></div></button>`;
+  }).join("");
+  $("#pdet-body").innerHTML = h;
+}
+
+/* ---------------- bibliothèque ---------------- */
+let fCat = "tout", fZone = "tout", fTxt = "";
+function rendreFiltres(){
+  $("#f-cat").innerHTML = [`<button class="chip ${fCat==="tout"?"on":""}" data-c="tout">Tout</button>`]
+    .concat(Object.entries(LIB_CAT).map(([k,v]) =>
+      `<button class="chip ${fCat===k?"on":""}" data-c="${k}">${v}</button>`)).join("");
+  const zones = [...new Set(EXOS.flatMap(e => e.zones))]
+    .sort((a,b)=> (LIB_ZONE[a]||a).localeCompare(LIB_ZONE[b]||b));
+  $("#f-zone").innerHTML = [`<button class="chip ${fZone==="tout"?"on":""}" data-z="tout">Toutes zones</button>`]
+    .concat(zones.map(z => `<button class="chip ${fZone===z?"on":""}" data-z="${z}">${LIB_ZONE[z]||z}</button>`)).join("");
+  $$("#f-cat [data-c]").forEach(b => b.onclick = () => { fCat = b.dataset.c; rendreFiltres(); rendreBiblio(); });
+  $$("#f-zone [data-z]").forEach(b => b.onclick = () => { fZone = b.dataset.z; rendreFiltres(); rendreBiblio(); });
+}
+function rendreBiblio(){
+  const t = fTxt.trim().toLowerCase();
+  const sel = EXOS.filter(e =>
+    (fCat === "tout" || e.cat === fCat) &&
+    (fZone === "tout" || e.zones.includes(fZone)) &&
+    (!t || e.nom.toLowerCase().includes(t) || e.etapes.join(" ").toLowerCase().includes(t)));
+  $("#biblio-n").textContent = `${sel.length} exercice${sel.length>1?"s":""} sur ${EXOS.length}, tous sans matériel.`;
+  $("#biblio-liste").innerHTML = sel.length ? sel.map(e =>
+    `<button class="ligne" onclick="ouvrirExo('${e.id}')">${visuel(e,"lent")}
+      <div class="inf"><div class="nm">${esc(e.nom)}</div><div class="mt">${pastilles(e)}</div></div></button>`).join("")
+    : `<div class="vide">Aucun exercice ne correspond.</div>`;
+}
+$("#rech").oninput = ev => { fTxt = ev.target.value; rendreBiblio(); };
+
+/* ---------------- fiche exercice ---------------- */
+window.ouvrirExo = function(id){
+  const e = PAR_ID[id];
+  $("#det-body").innerHTML = `
+    ${visuel(e)}
+    <h1 style="font-size:23px;margin-top:16px">${esc(e.nom)}</h1>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+      ${pastilles(e, 4)}<span class="pill">${fmtCible(e, e.defaut)}</span></div>
+    <ol class="etapes">${e.etapes.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
+    <div class="astuce"><div><b>Conseil</b>${esc(e.conseil)}</div></div>
+    <div style="margin-top:16px">
+      <button class="btn pri" onclick="demarrer({plan:[{id:'${e.id}',cible:${e.defaut},repos:0}],tours:1,nb:1,titre:'${esc(e.nom).replace(/'/g,"")}'},null)">
+        Faire cet exercice seul</button></div>
+    <div style="font-size:12.5px;color:var(--txt3);margin-top:20px;line-height:1.5">
+      Zones travaillées : ${e.zones.map(z => LIB_ZONE[z]||z).join(", ")}.</div>`;
+  $("#det").classList.add("on"); $("#det").scrollTop = 0;
+};
+$("#det-x").onclick = () => $("#det").classList.remove("on");
+
+/* ===================================================================
+   LECTEUR DE SÉANCE
+   =================================================================== */
+let S = null, timer = null, audio = null;
+
+function parler(txt){
+  if (!DB.d.voix || !window.speechSynthesis) return;
+  try{
+    const u = new SpeechSynthesisUtterance(txt);
+    u.lang = "fr-FR"; u.rate = 1.05;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }catch(e){}
+}
+function bip(freq = 880, ms = 130){
+  try{
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.frequency.value = freq; o.type = "sine"; o.connect(g); g.connect(audio.destination);
+    g.gain.setValueAtTime(.18, audio.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, audio.currentTime + ms/1000);
+    o.start(); o.stop(audio.currentTime + ms/1000);
+  }catch(e){}
+}
+
+window.demarrer = function(seance, origine){
+  // chaque exercice bilatéral est dédoublé (côté droit / côté gauche)
+  const etapes = [];
+  seance.plan.forEach(p => {
+    const e = PAR_ID[p.id];
+    if (e.cotes){
+      etapes.push({...p, cote:"1er côté"});
+      etapes.push({...p, cote:"2e côté", repos:p.repos});
+    } else etapes.push({...p});
+  });
+  S = {seance, origine, etapes, i:-1, phase:"pret", reste:0, pause:false,
+       debut:Date.now(), secondes:0};
+  $("#play").classList.add("on");
+  document.body.style.overflow = "hidden";
+  majVoixBtn();
+  suivant();
+};
+
+function majVoixBtn(){ $("#pl-voix").textContent = DB.d.voix ? "🔊" : "🔇"; }
+$("#pl-voix").onclick = () => { DB.d.voix = !DB.d.voix; DB.sauver(); majVoixBtn();
+  if (!DB.d.voix && window.speechSynthesis) speechSynthesis.cancel(); };
+$("#pl-quit").onclick = () => quitter(false);
+
+function quitter(fini){
+  clearInterval(timer); timer = null;
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  $("#play").classList.remove("on"); $("#play").classList.remove("repos");
+  document.body.style.overflow = "";
+  S = null;
+  rendreAccueil(); rendreProgrammes();
+  if ($("#pdet").classList.contains("on")) rendreProgDetail();
+}
+
+function suivant(){
+  clearInterval(timer); timer = null;
+  S.i++;
+  if (S.i >= S.etapes.length) return terminer();
+  const et = S.etapes[S.i], e = PAR_ID[et.id];
+  S.phase = "exo";
+  $("#play").classList.remove("repos");
+  if (e.type === "temps"){
+    S.reste = et.cible; S.pause = false;
+    parler(e.nom + (et.cote ? ", " + et.cote : ""));
+    rendreExoTemps(); lancerTimer();
+  } else {
+    parler(e.nom + (et.cote ? ", " + et.cote : "") + ", " + et.cible + " répétitions");
+    rendreExoReps();
+  }
+}
+
+function lancerTimer(){
+  clearInterval(timer);
+  timer = setInterval(() => {
+    if (S.pause) return;
+    S.reste--; S.secondes++;
+    if (S.reste <= 3 && S.reste > 0) bip(760, 90);
+    if (S.reste <= 0){
+      clearInterval(timer); timer = null; bip(1180, 240);
+      if (S.phase === "exo") repos(); else suivant();
+      return;
+    }
+    majChrono();
+  }, 1000);
+}
+
+function repos(){
+  const et = S.etapes[S.i];
+  if (!et.repos || S.i >= S.etapes.length - 1) return suivant();
+  S.phase = "repos"; S.reste = et.repos; S.pause = false;
+  $("#play").classList.add("repos");
+  const suiv = S.etapes[S.i + 1];
+  parler("Repos. Ensuite : " + PAR_ID[suiv.id].nom);
+  rendreRepos(); lancerTimer();
+}
+
+function entete(){
+  const total = S.etapes.length;
+  $("#pl-pos").textContent = `${Math.min(S.i+1,total)} / ${total} · ${S.seance.titre}`;
+  $("#pl-bar").style.width = (S.i / total * 100) + "%";
+}
+function majChrono(){ const c = $("#pl-chrono"); if (!c) return;
+  c.textContent = S.reste; c.classList.toggle("bas", S.reste <= 5); }
+
+function apercuSuivant(){
+  const s = S.etapes[S.i+1];
+  return s ? `<div class="pnext">Ensuite · <b>${esc(PAR_ID[s.id].nom)}</b></div>`
+           : `<div class="pnext">Dernier exercice</div>`;
+}
+function conseilCourt(e){
+  return `<div style="font-size:13.5px;color:var(--txt2);max-width:420px;line-height:1.45">${esc(e.conseil)}</div>`;
+}
+
+function rendreExoTemps(){
+  const et = S.etapes[S.i], e = PAR_ID[et.id];
+  entete();
+  $("#pl-body").innerHTML = `${visuel(e)}
+    <div><div class="pname">${esc(e.nom)}</div>
+      ${et.cote ? `<div class="pcote">${et.cote}</div>` : ""}</div>
+    <div class="chrono" id="pl-chrono">${S.reste}</div>
+    ${conseilCourt(e)}
+    ${apercuSuivant()}`;
+  $("#pl-ctl").innerHTML = `
+    <button class="btn w" onclick="precedent()">↺</button>
+    <button class="btn pri" id="pl-pause" onclick="basculerPause()">Pause</button>
+    <button class="btn w" onclick="sauter()">⏭</button>`;
+}
+function rendreExoReps(){
+  const et = S.etapes[S.i], e = PAR_ID[et.id];
+  entete();
+  $("#pl-body").innerHTML = `${visuel(e)}
+    <div><div class="pname">${esc(e.nom)}</div>
+      ${et.cote ? `<div class="pcote">${et.cote}</div>` : ""}</div>
+    <div class="chrono">${et.cible}</div>
+    <div style="font-size:14.5px;color:var(--txt2);margin-top:-6px">répétitions</div>
+    ${conseilCourt(e)}
+    ${apercuSuivant()}`;
+  $("#pl-ctl").innerHTML = `
+    <button class="btn w" onclick="precedent()">↺</button>
+    <button class="btn pri" onclick="repsFaites()">C'est fait</button>
+    <button class="btn w" onclick="sauter()">⏭</button>`;
+}
+function rendreRepos(){
+  const suiv = S.etapes[S.i+1], e = PAR_ID[suiv.id];
+  entete();
+  $("#pl-body").innerHTML = `
+    <div style="font-size:15px;color:var(--acc);font-weight:700;letter-spacing:.1em;text-transform:uppercase">Repos</div>
+    <div class="chrono" id="pl-chrono">${S.reste}</div>
+    ${visuel(e,"lent")}
+    <div><div style="font-size:13px;color:var(--txt3);font-weight:600;margin-bottom:4px">ENSUITE</div>
+      <div class="pname" style="font-size:20px">${esc(e.nom)}</div>
+      <div style="font-size:13.5px;color:var(--txt2);margin-top:6px">${fmtCible(e, suiv.cible)}</div></div>`;
+  $("#pl-ctl").innerHTML = `
+    <button class="btn" onclick="plusRepos()">+20 s</button>
+    <button class="btn pri" onclick="suivant()">Passer le repos</button>`;
+}
+
+window.basculerPause = function(){
+  S.pause = !S.pause;
+  const b = $("#pl-pause"); if (b) b.textContent = S.pause ? "Reprendre" : "Pause";
+};
+window.repsFaites = function(){ S.secondes += S.etapes[S.i].cible * 3; repos(); };
+window.sauter = function(){ clearInterval(timer); timer = null;
+  if (S.phase === "repos") suivant(); else repos(); };
+window.precedent = function(){ clearInterval(timer); timer = null;
+  S.i = Math.max(-1, S.i - 2); suivant(); };
+window.plusRepos = function(){ S.reste += 20; majChrono(); };
+
+function terminer(){
+  clearInterval(timer); timer = null;
+  const minutes = Math.max(1, Math.round((Date.now() - S.debut) / 60000));
+  const cats = {};
+  S.etapes.forEach(x => { const c = PAR_ID[x.id].cat; cats[c] = (cats[c]||0) + 1; });
+  DB.d.seances.push({date:new Date().toISOString(), titre:S.seance.titre,
+    minutes, exos:S.etapes.length, cats});
+  if (S.origine){
+    const p = DB.d.prog[S.origine.prog] || {faites:[], maj:0};
+    if (!p.faites.includes(S.origine.cle)) p.faites.push(S.origine.cle);
+    p.maj = Date.now();
+    DB.d.prog[S.origine.prog] = p;
+  }
+  DB.sauver();
+  parler("Séance terminée. Bravo !");
+  bip(880,160); setTimeout(()=>bip(1180,260), 170);
+  $("#pl-pos").textContent = ""; $("#pl-bar").style.width = "100%";
+  $("#play").classList.remove("repos");
+  $("#pl-body").innerHTML = `<div class="fini">
+    <div class="big">🎉</div>
+    <h1 style="font-size:25px">Séance terminée</h1>
+    <p style="color:var(--txt2);margin:9px 0 20px">${S.seance.titre}</p>
+    <div class="stats" style="margin:0">
+      <div class="stat"><div class="v">${minutes}</div><div class="l">minutes</div></div>
+      <div class="stat"><div class="v">${S.etapes.length}</div><div class="l">exercices</div></div>
+      <div class="stat"><div class="v">${serieActuelle()}</div><div class="l">jours d'affilée</div></div>
+    </div></div>`;
+  $("#pl-ctl").innerHTML = `<button class="btn pri" onclick="quitter(true)">Terminer</button>`;
+}
+
+/* ---------------- suivi ---------------- */
+function jourCle(d){ const x = new Date(d); x.setHours(12,0,0,0); return x.toISOString().slice(0,10); }
+function serieActuelle(){
+  const jours = new Set(DB.d.seances.map(s => jourCle(s.date)));
+  if (!jours.size) return 0;
+  let n = 0; const d = new Date(); d.setHours(12,0,0,0);
+  if (!jours.has(jourCle(d))) d.setDate(d.getDate() - 1);
+  while (jours.has(jourCle(d))){ n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function rendreSuivi(){
+  const se = DB.d.seances;
+  const totalMin = se.reduce((t,s)=>t + s.minutes, 0);
+  $("#su-stats").innerHTML = `
+    <div class="stat"><div class="v">${se.length}</div><div class="l">séances</div></div>
+    <div class="stat"><div class="v">${totalMin}</div><div class="l">minutes</div></div>
+    <div class="stat"><div class="v">${serieActuelle()}</div><div class="l">jours d'affilée</div></div>`;
+
+  // carte de régularité : 10 semaines, lundi → dimanche
+  const parJour = {};
+  se.forEach(s => { const k = jourCle(s.date); parJour[k] = (parJour[k]||0) + 1; });
+  const fin = new Date(); fin.setHours(12,0,0,0);
+  const dec = (fin.getDay() + 6) % 7;
+  fin.setDate(fin.getDate() + (6 - dec));
+  let cases = "";
+  for (let i = 69; i >= 0; i--){
+    const d = new Date(fin); d.setDate(d.getDate() - i);
+    const n = parJour[jourCle(d)] || 0;
+    const futur = d > new Date();
+    cases += `<i class="${n>=3?"d3":n===2?"d2":n===1?"d1":""}" ${futur?'style="opacity:.18"':""}
+      title="${d.toLocaleDateString("fr-FR")}${n?` · ${n} séance(s)`:""}"></i>`;
+  }
+  $("#su-heat").innerHTML = cases;
+
+  // répartition par catégorie
+  const tot = {};
+  se.forEach(s => Object.entries(s.cats||{}).forEach(([c,n]) => tot[c] = (tot[c]||0) + n));
+  const somme = Object.values(tot).reduce((a,b)=>a+b, 0);
+  $("#su-repart").innerHTML = somme ? Object.entries(tot).sort((a,b)=>b[1]-a[1]).map(([c,n]) => `
+    <div style="margin-bottom:11px">
+      <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:5px">
+        <span>${LIB_CAT[c]||c}</span><span style="color:var(--txt3)">${Math.round(n/somme*100)} %</span></div>
+      <div style="height:7px;background:var(--bg3);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${n/somme*100}%;background:var(--acc)"></div></div>
+    </div>`).join("") : `<div class="vide" style="padding:8px">Rien encore enregistré.</div>`;
+
+  // historique
+  $("#su-hist").innerHTML = se.length ? se.slice().reverse().slice(0,25).map(s => `
+    <div class="hist"><div>
+      <div class="d">${esc(s.titre)}</div>
+      <div class="s">${new Date(s.date).toLocaleDateString("fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
+    </div><div style="text-align:right">
+      <div class="d">${s.minutes} min</div><div class="s">${s.exos} exos</div></div></div>`).join("")
+    : `<div class="vide" style="padding:8px">Votre première séance apparaîtra ici.</div>`;
+}
+/* confirm() est refusé par le cadre d'hébergement : on demande un second clic volontaire */
+let resetArme = false;
+$("#su-reset").onclick = () => {
+  const b = $("#su-reset");
+  if (!resetArme){
+    resetArme = true; b.textContent = "Confirmer l'effacement définitif";
+    b.style.color = "var(--rose)";
+    setTimeout(() => { resetArme = false; b.textContent = "Effacer tout l'historique"; b.style.color = "var(--txt3)"; }, 4000);
+    return;
+  }
+  DB.d.seances = []; DB.d.prog = {}; DB.sauver();
+  resetArme = false; b.textContent = "Effacer tout l'historique"; b.style.color = "var(--txt3)";
+  rendreSuivi(); rendreAccueil(); rendreProgrammes();
+};
+
+/* ---------------- démarrage ---------------- */
+rendreAccueil(); rendreProgrammes(); rendreFiltres(); rendreBiblio(); rendreSuivi();
+
+/* ---------------- mode hors ligne ----------------
+   Le service worker met en cache les 136 fichiers de l'application.
+   Il n'est disponible que sur un hébergement classique (GitHub Pages par
+   exemple) : dans un cadre qui les refuse, l'application fonctionne
+   normalement mais sans garantie de démarrage à froid sans réseau. */
+(function horsLigne(){
+  const z = document.getElementById("acc-hl");
+  const dire = (txt, ok) => {
+    if (!z) return;
+    z.style.display = "block";
+    z.innerHTML = (ok ? "✓ " : "") + txt;
+    z.style.color = ok ? "var(--acc2)" : "var(--txt3)";
+  };
+  if (!("serviceWorker" in navigator)) return;
+  try{
+    navigator.serviceWorker.register("sw.js").then(reg => {
+      if (navigator.serviceWorker.controller) dire("Disponible hors ligne", true);
+      else {
+        dire("Mise en cache pour l'usage hors ligne…", false);
+        navigator.serviceWorker.addEventListener("controllerchange",
+          () => dire("Disponible hors ligne", true));
+        if (reg.installing) reg.installing.addEventListener("statechange", function(){
+          if (this.state === "activated") dire("Disponible hors ligne", true);
+        });
+      }
+    }).catch(() => {});
+  }catch(e){}
+})();
+
+// sécurité : empêcher la mise en veille pendant une séance, si disponible
+let verrou = null;
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState === "visible" && S && navigator.wakeLock){
+    try{ verrou = await navigator.wakeLock.request("screen"); }catch(e){}
+  }
+});
+</script>
+</body>
+</html>
