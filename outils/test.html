@@ -1,0 +1,38 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+body{margin:0;background:#15110c;font-family:system-ui;color:#c9b89c}
+.grille{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:8px}
+.c{background:#1d1710;border-radius:8px;padding:4px}
+.c h4{margin:2px 0 0;font-size:12px;font-weight:500;text-align:center;color:#9a8a70}
+svg{display:block;width:100%}
+</style></head><body><div class="grille" id="g"></div>
+<script src="figure.js"></script><script src="exercices.js"></script>
+<script>
+const C={o:"#5A4632",f:"#EBD6B4",d:"#C9AE87",ho:"#1C6B4D",hf:"#4BC892",hd:"#2E9A70"},EP=1.1;
+function cadre(A){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+ for(let i=0;i<=14;i++){A.cibleAnc=A.ca;const P=placer(melAngles(A.a,A.b,i/14),A);
+  for(const k in P){x0=Math.min(x0,P[k][0]);x1=Math.max(x1,P[k][0]);y0=Math.min(y0,P[k][1]);y1=Math.max(y1,P[k][1]);}}
+ const m=9.5;return [x0-m,y0-m,(x1+m)-(x0-m),Math.max(y1+m,98)-(y0-m)];}
+function dessine(cle,u){
+ const A=ANIMS[cle]; A.cibleAnc=[A.ca[0]+(A.cb[0]-A.ca[0])*u, A.ca[1]+(A.cb[1]-A.ca[1])*u];
+ const P=placer(melAngles(A.a,A.b,u),A), bb=cadre(A);
+ const prop = A.a.cuisse2!==undefined;
+ const D=[(prop?DECAL_PROPRE:DECAL)[0]*A.sens,(prop?DECAL_PROPRE:DECAL)[1]];
+ let s=`<svg viewBox="${bb.map(v=>v.toFixed(1)).join(' ')}"><line x1="${bb[0]+2}" y1="95" x2="${bb[0]+bb[2]-2}" y2="95" stroke="#3a2f22" stroke-width="0.7"/>`;
+ for(const e of ORDRE){
+  const d=e.fond?D:[0,0];
+  if(e.tete){const g=Math.atan2(P.head[1]-P.shoulder[1],P.head[0]-P.shoulder[0])*180/Math.PI+90;
+   s+=`<ellipse cx="${P.head[0]}" cy="${P.head[1]}" rx="${TETE.rx}" ry="${TETE.ry}" transform="rotate(${g.toFixed(1)},${P.head[0]},${P.head[1]})" fill="${C.f}" stroke="${C.o}" stroke-width="${EP}"/>`;continue;}
+  const o=OS[e.os], vif=A.muscles.includes(e.os);
+  s+=`<path d="${fuseau([P[o.de][0]+d[0],P[o.de][1]+d[1]],[P[o.a][0]+d[0],P[o.a][1]+d[1]],o.r[0],o.r[1])}" fill="${vif?(e.fond?C.hd:C.hf):(e.fond?C.d:C.f)}" stroke="${vif?C.ho:C.o}" stroke-width="${EP}" stroke-linejoin="round"/>`;}
+ return s+`</svg>`;}
+let h="";
+for(const cle of (window.SEUL||Object.keys(ANIMS)))
+ for(const q of [0,0.5,1]){const A=ANIMS[cle];h+=`<div class="c">${dessine(cle,avancement(A,q))}<h4>${A.nom} · q=${q}</h4></div>`;}
+document.getElementById('g').innerHTML=h;
+const ec=[];
+for(const cle of (window.SEUL||Object.keys(ANIMS))){const A=ANIMS[cle];
+ for(let i=0;i<=24;i++){A.cibleAnc=A.ca;const P=placer(melAngles(A.a,A.b,avancement(A,i/24)),A);
+  for(const n in OS){const o=OS[n];const L=Math.hypot(P[o.a][0]-P[o.de][0],P[o.a][1]-P[o.de][1]);
+   if(Math.abs(L-o.L)>0.01) ec.push(cle+'/'+n);}}}
+window.VERIF = ec.length?[...new Set(ec)].slice(0,6):'toutes les longueurs constantes';
+</script></body></html>
