@@ -1,0 +1,22 @@
+const {chromium}=require('playwright');
+const http=require('http'),fs=require('fs'),path=require('path');
+const T={'.html':'text/html','.json':'application/json','.webp':'image/webp','.png':'image/png','.js':'text/javascript'};
+const srv=http.createServer((q,r)=>{let p=decodeURIComponent(q.url.split('?')[0]);
+ if(p==='/')p='/index.html'; const f=path.join('/home/claude/app',p);
+ if(!fs.existsSync(f)||fs.statSync(f).isDirectory()){r.writeHead(404);return r.end('404');}
+ r.writeHead(200,{'Content-Type':T[path.extname(f)]||'application/octet-stream'});
+ fs.createReadStream(f).pipe(r);});
+(async()=>{await new Promise(r=>srv.listen(8095,r));
+ const b=await chromium.launch();
+ const ctx=await b.newContext({viewport:{width:390,height:844}});
+ const pg=await ctx.newPage();
+ const cdp=await ctx.newCDPSession(pg);
+ await cdp.send('Network.emulateNetworkConditions',{offline:false,downloadThroughput:1.6e6/8,uploadThroughput:7.5e5/8,latency:150});
+ await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});
+ const t0=Date.now();
+ await pg.goto('http://localhost:8095/',{waitUntil:'load'});
+ await pg.waitForTimeout(2500);
+ const txt=await pg.evaluate(()=>{const z=document.querySelector('#acc-diag');return z?z.textContent:null;});
+ console.log('chargement complet :', Date.now()-t0, 'ms  (4x CPU, 1,6 Mb/s)');
+ console.log('ligne de version :', txt);
+ await b.close(); srv.close();})();

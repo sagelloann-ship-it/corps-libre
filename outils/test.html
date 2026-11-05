@@ -1,11 +1,11 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><style>
 body{margin:0;background:#15110c;font-family:system-ui;color:#c9b89c}
-.grille{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:8px}
+.grille{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:8px}
 .c{background:#1d1710;border-radius:8px;padding:4px}
 .c h4{margin:2px 0 0;font-size:12px;font-weight:500;text-align:center;color:#9a8a70}
 svg{display:block;width:100%}
 </style></head><body><div class="grille" id="g"></div>
-<script src="figure.js"></script><script src="exercices.js"></script>
+<script>window.SEUL=["Wall_Sit","Bird_Dog"];</script><script src="figure.js"></script><script src="exercices.js"></script>
 <script>
 const C={o:"#5A4632",f:"#EBD6B4",d:"#C9AE87",ho:"#1C6B4D",hf:"#4BC892",hd:"#2E9A70"},EP=1.1;
 
@@ -20,16 +20,27 @@ function dessine(cle,u){
  const plat = !A.azimut;
  const prop = (A.poses?A.poses[0]:A.a).cuisse2!==undefined;
  const D=[(prop?DECAL_PROPRE:DECAL)[0]*A.sens,(prop?DECAL_PROPRE:DECAL)[1]];
- const median=(P.bassin0[2]+P.nuque[2])/2;
- /* un élément par os, plus la tête ; tri du plus lointain au plus proche */
- const el=[];
- for(const n in OS){const o=OS[n];
-  el.push({os:n, z:(P[o.de][2]+P[o.a][2])/2, i:ORDRE.indexOf(n)});}
- el.push({tete:1, z:(P.nuque[2]+P.head[2])/2, i:ORDRE.indexOf("tete")});
- el.sort((a,b)=> (b.z-a.z) || (a.i-b.i));
- let s=`<svg viewBox="${bb.map(v=>v.toFixed(1)).join(' ')}"><line x1="${bb[0]+2}" y1="95" x2="${bb[0]+bb[2]-2}" y2="95" stroke="#3a2f22" stroke-width="0.7"/>`;
+ /* tri par ensemble cohérent, comme dans l'application : un membre ne se
+    découpe jamais, et l'ordre ne bascule qu'au-delà d'une marge */
+ const GR=[{n:"jambeB",os:["cuisse2","jambe2","pied2"]},
+           {n:"brasB", os:["bras2","avbras2","main2"]},
+           {n:"buste", os:["bassin","tronc","cou","tete"]},
+           {n:"jambeA",os:["cuisse","jambe","pied"]},
+           {n:"brasA", os:["bras","avbras","main"]}];
+ const profOs=n=> n==="tete" ? (P.nuque[2]+P.head[2])/2
+                             : (P[OS[n].de][2]+P[OS[n].a][2])/2;
+ const prof={}; for(const g of GR) prof[g.n]=g.os.reduce((t,n)=>t+profOs(n),0)/g.os.length;
+ let ordre=GR.map(g=>g.n);
+ for(let t=0,b=true;b&&t<8;t++){b=false;
+  for(let i=0;i<ordre.length-1;i++)
+   if(prof[ordre[i]]<prof[ordre[i+1]]-2.2){const x=ordre[i];ordre[i]=ordre[i+1];ordre[i+1]=x;b=true;}}
+ const iBuste=ordre.indexOf("buste"), el=[];
+ ordre.forEach((nom,i)=>{ const g=GR.find(g=>g.n===nom);
+  for(const n of g.os) el.push(n==="tete"?{tete:1,fond:i<iBuste}:{os:n,fond:i<iBuste}); });
+ let s=`<svg viewBox="${bb.map(v=>v.toFixed(1)).join(' ')}"><line x1="${bb[0]+2}" y1="95" x2="${bb[0]+bb[2]-2}" y2="95" stroke="#3a2f22" stroke-width="0.7"/>`
+  + (A.mur===undefined ? "" : `<line x1="${A.mur}" y1="95" x2="${A.mur}" y2="${bb[1]+2}" stroke="#3a2f22" stroke-width="0.7"/>`);
  for(const e of el){
-  const fond = e.z > median + 4;
+  const fond = e.fond;
   const d = (plat && fond) ? D : [0,0];
   if(e.tete){const g=Math.atan2(P.head[1]-P.nuque[1],P.head[0]-P.nuque[0])*180/Math.PI+90;
    s+=`<ellipse cx="${(P.head[0]+d[0]).toFixed(2)}" cy="${(P.head[1]+d[1]).toFixed(2)}" rx="${TETE.rx}" ry="${TETE.ry}" transform="rotate(${g.toFixed(1)},${(P.head[0]+d[0]).toFixed(2)},${(P.head[1]+d[1]).toFixed(2)})" fill="${C.f}" stroke="${C.o}" stroke-width="${EP}"/>`;continue;}
@@ -41,7 +52,7 @@ function dessine(cle,u){
 
 let h="";
 for(const cle of (window.SEUL||Object.keys(ANIMS)))
- for(const q of [0,0.5,1]){const A=ANIMS[cle];h+=`<div class="c">${dessine(cle,avancement(A,q))}<h4>${A.nom} · q=${q}</h4></div>`;}
+ for(const q of [0,0.15,0.3,0.4,0.5]){const A=ANIMS[cle];h+=`<div class="c">${dessine(cle,avancement(A,q))}<h4>${A.nom} · q=${q}</h4></div>`;}
 document.getElementById('g').innerHTML=h;
 
 const ec=[];
