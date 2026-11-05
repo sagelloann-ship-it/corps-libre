@@ -197,14 +197,34 @@ function placer(angles_, ex){
 }
 
 /* Projection orthographique. Renvoie {x, y, z} : z est la profondeur,
-   croissante vers le fond. */
-function projeter(P, azimut){
-  const A = rad(azimut || 0), ca = Math.cos(A), sa = Math.sin(A), Q = {};
+   croissante vers le fond.
+
+   `azimut` fait tourner la caméra autour de la verticale, `plongee` la fait
+   monter au-dessus du sujet. La plongée est bien un mouvement de CAMÉRA et non
+   du corps : la figure reste droite et ses appuis restent dans le plan du sol,
+   qui n'est alors plus vu comme une ligne mais comme un plan fuyant. Coucher le
+   corps est une autre opération — c'est le roulis, et il appartient à la pose. */
+function projeter(P, azimut, plongee){
+  const A = rad(azimut || 0), ca = Math.cos(A), sa = Math.sin(A);
+  const E = rad(plongee || 0), ce = Math.cos(E), se = Math.sin(E), Q = {};
   for (const k in P){
     const p = P[k];
-    Q[k] = [p[0]*ca + p[2]*sa, p[1], -p[0]*sa + p[2]*ca];
+    const x = p[0]*ca + p[2]*sa, y = p[1], z = -p[0]*sa + p[2]*ca;
+    Q[k] = [x, y*ce - z*se, y*se + z*ce];
   }
   return Q;
+}
+/* Hauteur à l'écran d'une ligne tracée SUR LE SOL (y = 95) à la profondeur
+   monde zm. En plongée nulle elles se confondent toutes en une seule ligne. */
+function solAEcran(zm, plongee){
+  const E = rad(plongee || 0);
+  return 95*Math.cos(E) - zm*Math.sin(E);
+}
+/* Hauteur réelle d'un point projeté : sert à vérifier qu'un appui est bien
+   resté dans le plan du sol. Inverse de la projection en plongée. */
+function hauteurReelle(Y, Z, plongee){
+  const E = rad(plongee || 0);
+  return Y*Math.cos(E) + Z*Math.sin(E);
 }
 
 function fuseau(A,B,ra,rb){
